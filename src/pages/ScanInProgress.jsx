@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 /** Page de l'analyse */
 const ScanInProgress = () => {
-  const [progress, setProgress] = useState(65);
+  const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -11,19 +11,22 @@ const ScanInProgress = () => {
     const interval = setInterval(() => {
       setProgress((p) => {
         if (p >= 100) return 100;
-        return p + 5;
+        return p + 2;
       });
-    }, 600);
+    }, 150);
 
     const timeout = setTimeout(() => {
       navigate("/analyses/resultat");
-    }, 7000); // environ 7s
+    }, 8000); // environ 8s
 
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
     };
   }, [navigate]);
+
+  // Calcul de l'angle du cercle en fonction du pourcentage
+  const progressAngle = progress * 3.6;
 
   return (
     <div className="page-wrapper">
@@ -38,12 +41,18 @@ const ScanInProgress = () => {
     {/* Carte principale contenant l’indicateur de progression + détails des étapes */}
       <div className="card inprogress-card">
 
-    {/* Colonne gauche : cercle de progression */}
+        {/* Colonne gauche : cercle de progression */}
         <div className="progress-circle-wrapper">
-          <div className="progress-circle">
+          <div className="progress-circle"
+            style={{
+              background: `conic-gradient(
+                      var(--accent) ${progressAngle}deg,
+                      #111827 ${progressAngle}deg
+                      )`
+            }}>
             <div className="progress-circle-inner">
 
-    {/* Pourcentage d’avancement affiché au centre du cercle */}
+              {/* Pourcentage d’avancement affiché au centre du cercle */}
               <span className="progress-value">{progress}%</span>
               <span className="progress-label">Analyse en cours</span>
             </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 /** Scan History */
 const data = [
@@ -61,7 +62,7 @@ const ScanHistory = () => {
     {/* Actions globales de la page (export, nouveau scan) */}
         <div className="page-header-actions">
           <button className="btn-secondary">Exporter CSV</button>
-          <button className="btn-primary">+ Nouveau scan</button>
+          <Link to="/analyses/nouveau" className="btn-primary">+ Nouveau scan</Link>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import React from "react";
 import StatCard from "../components/StatCard";
 import Tag from "../components/Tag";
+import { jsPDF } from "jspdf";
 
 
 /** Page Résultat du scan */
@@ -35,118 +36,217 @@ const ScanResult = () => {
     },
   ];
 
+const handleDownloadPdf = () => {
+  const doc = new jsPDF();
+
+  // ========== EN-TÊTE ==========
+  let y = 20;
+
+  doc.setFontSize(18);
+  doc.text("Rapport d'analyse de sécurité", 14, y);
+  y += 10;
+
+  doc.setFontSize(11);
+  doc.setTextColor(100);
+  doc.text("Généré par ScanHathon", 14, y);
+  y += 6;
+  doc.text("Score global : 72/100", 14, y);
+  y += 5;
+  doc.text("Vulnérabilités : 3 Critique · 5 Élevée · 4 Moyenne", 14, y);
+  y += 10;
+
+  // ========== SECTION VULNÉRABILITÉS ==========
+  doc.setTextColor(0);
+  doc.setFontSize(13);
+  doc.text("Vulnérabilités détectées", 14, y);
+  y += 8;
+
+  doc.setFontSize(11);
+
+  vulns.forEach((v, index) => {
+    // Si on arrive en bas de page → nouvelle page
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+
+    // Titre de la vulnérabilité
+    doc.setFont(undefined, "bold");
+    doc.text(`${index + 1}. [${v.code}] ${v.title}`, 14, y);
+    y += 6;
+
+    // Sévérité
+    doc.setFont(undefined, "normal");
+    doc.setTextColor(120);
+    doc.text(`Sévérité : ${v.severity}`, 14, y);
+    y += 5;
+
+    // Description (avec word-wrap)
+    doc.setTextColor(60);
+    const descLines = doc.splitTextToSize(v.description, 180); // 180mm de largeur max
+    doc.text(descLines, 14, y);
+    y += descLines.length * 5 + 6;
+
+    doc.setTextColor(0);
+  });
+
+  // ========== SECTION RECOMMANDATIONS ==========
+  if (y > 240) {
+    doc.addPage();
+    y = 20;
+  }
+
+  doc.setFontSize(13);
+  doc.setTextColor(0);
+  doc.text("Corrections suggérées (OWASP Top 10)", 14, y);
+  y += 8;
+
+  doc.setFontSize(11);
+  doc.setTextColor(60);
+
+  const reco = [
+    "• A03:2021 - Injection : Utiliser des requêtes paramétrées (Prepared Statements) pour toutes les interactions avec la base de données.",
+    "• A02:2021 - Cryptographic Failures : Migrer vers Argon2id ou bcrypt avec un coût adapté pour les mots de passe.",
+    "• A05:2021 - Security Misconfiguration : Ajouter l’en-tête Strict-Transport-Security avec max-age=63072000; includeSubDomains.",
+  ];
+
+  reco.forEach((line) => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+
+    const wrapped = doc.splitTextToSize(line, 180);
+    doc.text(wrapped, 14, y);
+    y += wrapped.length * 5 + 3;
+  });
+
+  // ========== SAUVEGARDE ==========
+  doc.save("rapport-securite.pdf");
+};
 
   return (
     <div className="page-wrapper">
-    {/* En-tête de page : titre + description + action principale */}
-      <div className="page-header-row">
-        <div>
-          <h1 className="page-title">Résultats de l’analyse</h1>
-          <p className="page-subtitle">
-            Visualisez les vulnérabilités détectées sur ce dépôt.
-          </p>
-        </div>
-    {/* CTA principal : export du rapport sous forme de PDF */}
-        <button className="btn-primary">Télécharger le rapport PDF</button>
-      </div>
-
-    {/* Résumé des métriques principales sous forme de cartes */}
-      <div className="grid-3">
-        <StatCard
-          label="Score global"
-          value="72/100"
-          sub="Amélioration de 3 points depuis l’analyse précédente (24 Octobre)"
-        />
-        <StatCard
-          label="Vulnérabilités"
-          value="03 Critique · 05 Élevée · 04 Moyenne"
-          sub="12 vulnérabilités au total détectées."
-        />
-
-    {/* Carte spécifique pour le statut de conformité (sans StatCard) */}
-        <div className="card compliance-card">
-          <div className="stat-label">Statut de conformité</div>
-          <div className="stat-value">Partiellement conforme</div>
-          <div className="stat-sub">
-            Évaluation basée sur les standards ISO 27001 et OWASP.
+      {/* En-tête de page : titre + description + action principale */}
+      <div id="rapport-pdf">
+        <div className="page-header-row">
+          <div>
+            <h1 className="page-title">Résultats de l’analyse</h1>
+            <p className="page-subtitle">
+              Visualisez les vulnérabilités détectées sur ce dépôt.
+            </p>
           </div>
-          <button className="btn-link">Voir le détail de conformité →</button>
+          {/* CTA principal : export du rapport sous forme de PDF */}
+          <button className="btn-primary" onClick={handleDownloadPdf}>
+            Télécharger le rapport PDF</button>
         </div>
-      </div>
 
-    {/* Layout principal : liste des vulnérabilités + panneau de remédiation */}
-      <div className="result-layout">
 
-    {/* Colonne gauche : vulnérabilités détectées */}
-        <section className="card vulns-card">
-          <div className="card-header">
-            <h2 className="section-title">Vulnérabilités détectées</h2>
-            <div className="card-header-actions">
+        {/* Résumé des métriques principales sous forme de cartes */}
+        <div className="grid-3">
+          <StatCard
+            label="Score global"
+            value="72/100"
+            sub="Amélioration de 3 points depuis l’analyse précédente (24 Octobre)"
+          />
+          <StatCard
+            label="Vulnérabilités"
+            value="03 Critique · 05 Élevée · 04 Moyenne"
+            sub="12 vulnérabilités au total détectées."
+          />
 
-    {/* Boutons prévus pour des fonctionnalités futures (tri, filtres) */}
-              <button className="btn-chip">Trier par : Sévérité</button>
-              <button className="btn-chip">Filtrer</button>
+          {/* Carte spécifique pour le statut de conformité (sans StatCard) */}
+          <div className="card compliance-card">
+            <div className="stat-label">Statut de conformité</div>
+            <div className="stat-value">Partiellement conforme</div>
+            <div className="stat-sub">
+              Évaluation basée sur les standards ISO 27001 et OWASP.
             </div>
+            <button
+              className="btn-link"
+              onClick={() =>
+                window.open(
+                  "https://owasp.org/Top10/2021/fr/index.html",
+                  "_blank")}>
+              Voir le détail OWASP →
+            </button>
           </div>
+        </div>
 
-    {/* À remplacer par un appel API. */}
-          <div className="vuln-list">
-            {vulns.map((v) => (
-              <article key={v.id} className="vuln-item">
-                <div className="vuln-header">
+        {/* Layout principal : liste des vulnérabilités + panneau de remédiation */}
+        <div className="result-layout">
 
-    {/* Tag de sévérité : style dépend du variant */}
-                  <Tag variant={v.severityVariant}>{v.severity}</Tag>
-                  <span className="vuln-id">ID : {v.code}</span>
-                </div>
+          {/* Colonne gauche : vulnérabilités détectées */}
+          <section className="card vulns-card">
+            <div className="card-header">
+              <h2 className="section-title">Vulnérabilités détectées</h2>
+              <div className="card-header-actions">
 
-    {/* Titre + description de la vulnérabilité */}
-                <h3 className="vuln-title">{v.title}</h3>
-                <p className="vuln-desc">{v.description}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+                {/* Boutons prévus pour des fonctionnalités futures (tri, filtres) */}
+                <button className="btn-chip">Trier par : Sévérité</button>
+                <button className="btn-chip">Filtrer</button>
+              </div>
+            </div>
 
-    {/* Colonne droite : recommandations de remédiation */}
-        <aside className="card fixes-card">
-          <h2 className="section-title">Corrections suggérées</h2>
-          <p className="fixes-subtitle">Basé sur OWASP Top 10</p>
+            {/* À remplacer par un appel API. */}
+            <div className="vuln-list">
+              {vulns.map((v) => (
+                <article key={v.id} className="vuln-item">
+                  <div className="vuln-header">
 
-          <ul className="fixes-list">
-            <li>
-              <strong>A03:2021-Injection</strong>
-              <p>
-                Utiliser des requêtes paramétrées (Prepared Statements) pour
-                toutes les interactions avec la base de données.
-              </p>
-              <pre className="code-block">
-                <code>
-                  {`$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");`}
-                </code>
-              </pre>
-            </li>
-            <li>
-              <strong>A02:2021-Cryptographic Failures</strong>
-              <p>
-                Mettre à jour les algorithmes de hachage vers Argon2id ou bcrypt
-                avec un coût minimal de 12.
-              </p>
-            </li>
-            <li>
-              <strong>A05:2021-Security Misconf.</strong>
-              <p>
-                Ajouter l’en-tête&nbsp;
-                <code>Strict-Transport-Security</code> avec{" "}
-                <code>max-age=63072000; includeSubDomains</code>.
-              </p>
-            </li>
-          </ul>
+                    {/* Tag de sévérité : style dépend du variant */}
+                    <Tag variant={v.severityVariant}>{v.severity}</Tag>
+                    <span className="vuln-id">ID : {v.code}</span>
+                  </div>
 
-          <button className="btn-secondary">
-            Voir le guide complet de remédiation
-          </button>
-        </aside>
+                  {/* Titre + description de la vulnérabilité */}
+                  <h3 className="vuln-title">{v.title}</h3>
+                  <p className="vuln-desc">{v.description}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* Colonne droite : recommandations de remédiation */}
+          <aside className="card fixes-card">
+            <h2 className="section-title">Corrections suggérées</h2>
+            <p className="fixes-subtitle">Basé sur OWASP Top 10</p>
+
+            <ul className="fixes-list">
+              <li>
+                <strong>A03:2021-Injection</strong>
+                <p>
+                  Utiliser des requêtes paramétrées (Prepared Statements) pour
+                  toutes les interactions avec la base de données.
+                </p>
+                <pre className="code-block">
+                  <code>
+                    {`$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");`}
+                  </code>
+                </pre>
+              </li>
+              <li>
+                <strong>A02:2021-Cryptographic Failures</strong>
+                <p>
+                  Mettre à jour les algorithmes de hachage vers Argon2id ou bcrypt
+                  avec un coût minimal de 12.
+                </p>
+              </li>
+              <li>
+                <strong>A05:2021-Security Misconf.</strong>
+                <p>
+                  Ajouter l’en-tête&nbsp;
+                  <code>Strict-Transport-Security</code> avec{" "}
+                  <code>max-age=63072000; includeSubDomains</code>.
+                </p>
+              </li>
+            </ul>
+
+            <button className="btn-secondary">
+              Voir le guide complet de remédiation
+            </button>
+          </aside>
+        </div>
       </div>
     </div>
   );
