@@ -28,7 +28,7 @@ const ForgotPassword = () => {
               id="email"
               type="email"
               className="input auth-input"
-              placeholder="vous@exemple.com"
+              placeholder="exemple@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

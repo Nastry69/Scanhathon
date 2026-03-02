@@ -37,7 +37,7 @@ const Register = () => {
               id="fullName"
               type="text"
               className="input auth-input"
-              placeholder="Prénom Nom"
+              placeholder="Prénom & Nom"
               value={form.fullName}
               onChange={onChangeField("fullName")}
               required
@@ -52,7 +52,7 @@ const Register = () => {
               id="email"
               type="email"
               className="input auth-input"
-              placeholder="vous@exemple.com"
+              placeholder="exemple@gmail.com"
               value={form.email}
               onChange={onChangeField("email")}
               required
