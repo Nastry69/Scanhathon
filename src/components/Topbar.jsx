@@ -24,8 +24,6 @@ const Topbar = () => {
       <div className="topbar-left" />
         <span className="logo-text">ScanHathon</span>
       <div className="topbar-right">
-
-
         {loggedIn ? (
           <>
             {/* Icône profil (plus tard tu pourras l’ouvrir en menu) */}
