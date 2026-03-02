@@ -30,16 +30,16 @@ const Register = () => {
 
         <form onSubmit={onSubmit} className="auth-form">
           <div className="auth-field">
-            <label className="auth-label" htmlFor="fullName">
+            <label className="auth-label" htmlFor="username">
               Nom complet
             </label>
             <input
-              id="fullName"
+              id="username"
               type="text"
               className="input auth-input"
-              placeholder="Prénom & Nom"
+              placeholder="Username"
               value={form.fullName}
-              onChange={onChangeField("fullName")}
+              onChange={onChangeField("username")}
               required
             />
           </div>

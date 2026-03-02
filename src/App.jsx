@@ -22,7 +22,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
-        <Route path="/profil" element={<Profile />} />
+        <Route path="/me" element={<Profile />} />
         {/* fallback */}
         <Route path="*" element={<Navigate to="/analyses/nouveau" />} />
       </Routes>

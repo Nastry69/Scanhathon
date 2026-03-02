@@ -46,15 +46,15 @@ const Profile = () => {
           <h2 className="section-title">Informations du compte</h2>
           <form onSubmit={onSubmitProfile} className="profile-form">
             <div className="auth-field">
-              <label className="auth-label" htmlFor="fullName">
+              <label className="auth-label" htmlFor="username">
                 Nom complet
               </label>
               <input
-                id="fullName"
+                id="username"
                 type="text"
                 className="input auth-input"
                 value={profile.fullName}
-                onChange={onChangeProfileField("fullName")}
+                onChange={onChangeProfileField("username")}
                 required
               />
             </div>
