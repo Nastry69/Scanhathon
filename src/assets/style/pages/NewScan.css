@@ -21,6 +21,15 @@
   color: var(--text-soft);
 }
 
+a {
+  text-decoration: none;
+  color: #2563eb;
+}
+
+h1, p {
+  text-align: center;
+}
+
 /* Inputs spécifiques à cette page */
 
 .input-wrapper {
@@ -87,4 +96,10 @@
   margin-top: 10px;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+.btn-primary {
+  display: flex;
+  align-self: center;
+  justify-self: center;
 }

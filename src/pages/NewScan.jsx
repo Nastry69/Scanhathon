@@ -26,6 +26,7 @@ const NewScan = () => {
       <p className="page-subtitle">
         Déposez vos fichiers ou liez votre repository pour obtenir un audit de
         sécurité complet et instantané.
+        <br />Si vous souhaitez conservez votre analyse <a href="/login">connectez-vous.</a>
       </p>
 
     {/* Formulaire principal de configuration du scan */}
