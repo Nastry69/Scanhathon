@@ -122,7 +122,7 @@ const ScanResult = () => {
               </p>
               <pre className="code-block">
                 <code>
-                  {`$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");`} {/** A remplacer proprement */}
+                  {`$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");`}
                 </code>
               </pre>
             </li>
