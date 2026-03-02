@@ -31,7 +31,7 @@ const Register = () => {
         <form onSubmit={onSubmit} className="auth-form">
           <div className="auth-field">
             <label className="auth-label" htmlFor="username">
-              Nom complet
+              Username
             </label>
             <input
               id="username"

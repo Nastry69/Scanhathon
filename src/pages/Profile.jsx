@@ -47,7 +47,7 @@ const Profile = () => {
           <form onSubmit={onSubmitProfile} className="profile-form">
             <div className="auth-field">
               <label className="auth-label" htmlFor="username">
-                Nom complet
+                Username
               </label>
               <input
                 id="username"
