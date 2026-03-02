@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 const Profile = () => {
   const [profile, setProfile] = useState({
-    fullName: "John Doe", // à remplacer par les vraies données plus tard
+    username: "John Doe", // à remplacer par les vraies données plus tard
     email: "john.doe@example.com",
   });
 

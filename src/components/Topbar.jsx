@@ -1,13 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { isAuthenticated, logout } from "../auth";
+import { isAuthenticated, logout } from "../utils/auth";
 
 /** Topbar */
 const Topbar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // On supprime le token côté front
+    localStorage.removeItem("token");
     logout();
     // On renvoie l'utilisateur sur la page de login
     navigate("/login");
@@ -22,16 +22,15 @@ const Topbar = () => {
   return (
     <header className="topbar">
       <div className="topbar-left" />
+        <span className="logo-text">ScanHathon</span>
       <div className="topbar-right">
-        <button className="topbar-icon-btn" aria-label="Notifications">
-          🔔
-        </button>
+
 
         {loggedIn ? (
           <>
             {/* Icône profil (plus tard tu pourras l’ouvrir en menu) */}
             <button className="topbar-icon-btn" aria-label="Profil">
-              👤
+              <i className="fa-solid fa-user"></i>
             </button>
 
             {/* Bouton de déconnexion */}
@@ -40,7 +39,7 @@ const Topbar = () => {
               onClick={handleLogout}
               aria-label="Déconnexion"
             >
-              ⏏
+            <i class="fa-solid fa-arrow-left-from-bracket"></i>
             </button>
           </>
         ) : (
@@ -50,7 +49,7 @@ const Topbar = () => {
             onClick={handleLoginClick}
             aria-label="Se connecter"
           >
-            🔐
+            <i className="fa-solid fa-user"></i>
           </button>
         )}
       </div>

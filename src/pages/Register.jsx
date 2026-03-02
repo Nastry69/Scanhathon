@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Register = () => {
   const [form, setForm] = useState({
-    fullName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",

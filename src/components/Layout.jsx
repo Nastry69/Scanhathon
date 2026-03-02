@@ -5,15 +5,16 @@ import Topbar from "./Topbar";
 
 /** Configuration du Layout */
 const Layout = ({ children }) => {
+  const loggedIn = !!localStorage.getItem("token");
   return (
     /** Conteneur principal */
     <div className="app-root">
-    {/** Barre latérale */} 
-      <Sidebar />
+      {loggedIn && <Sidebar />} {/**  Si connecter on affiche la barre latérale */} 
+   
     {/** Conteneur Main */}
       <div className="app-main">
     {/** Barre de Navigation */}
-        <Topbar />
+        <Topbar loggedIn={loggedIn}/>
     {/** Zone dynamique de contenu */}
         <main className="app-content">{children}</main>
       </div>
