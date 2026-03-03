@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-import { scanRepo } from "../utils/scanApi";
-=======
 import { useAuth } from "../utils/AuthContext";
 
->>>>>>> dev
 
 /** Page New Scan */
 const NewScan = () => {
