@@ -18,8 +18,8 @@ const Login = () => {
     setError(null);
     setLoading(true);
     try {
-      const { access_token } = await loginUser({ email: form.email, password: form.password });
-      login(access_token);
+      const { access_token, user } = await loginUser({ email: form.email, password: form.password });
+      login(access_token, user);
       navigate("/");
     } catch (err) {
       setError(err.message);
