@@ -3,18 +3,18 @@
 @import "./App.css";
 
 @import "./assets/style/components/Layout.css";
-@import "./assets/style/components/Sidebar.css";
 @import "./assets/style/components/Topbar.css";
 @import "./assets/style/components/StatCard.css";
 @import "./assets/style/components/Tag.css";
+@import "./assets/style/components/Register.css";
+@import "./assets/style/components/Login.css";
+
 
 @import "./assets/style/pages/NewScan.css";
 @import "./assets/style/pages/ScanProgress.css";
 @import "./assets/style/pages/ScanResult.css";
 @import "./assets/style/pages/ScanHistory.css";
-@import "./assets/style/pages/Login.css";
 @import "./assets/style/pages/ForgotPassword.css";
-@import "./assets/style/pages/Register.css";
 @import "./assets/style/pages/Profile.css";
 
 :root {
@@ -55,4 +55,3 @@ body,
 body {
   -webkit-font-smoothing: antialiased;
 }
-
