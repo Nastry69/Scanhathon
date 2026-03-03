@@ -128,11 +128,7 @@
     flex-direction: column;
   }
 
-  .sidebar {
-    display: none;
-  }
-
-  .topbar {
+.topbar {
     justify-content: space-between;
   }
 
