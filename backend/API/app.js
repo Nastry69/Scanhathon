@@ -1,11 +1,19 @@
+require('dotenv').config();
+const cors = require("cors");
 const express = require("express");
 const { scanRepo } = require("./controllers/scanController");
 
 const app = express();
+app.use(cors({
+  origin: 'http://localhost:5173',
+}));
 app.use(express.json());
 
 // Route principale
 app.post("/scan", scanRepo);
+
+// verife
+console.log('SEMGREP_APP_TOKEN chargé ?', !!process.env.SEMGREP_APP_TOKEN);
 
 // Route test
 app.get("/", (req, res) => {

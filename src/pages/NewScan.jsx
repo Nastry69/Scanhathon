@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { scanRepo } from "../utils/scanApi";
 
 /** Page New Scan */
 const NewScan = () => {

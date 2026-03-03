@@ -1,30 +1,63 @@
-const { prepareRepo } = require("../services/repoService");
-const { runNpmAudit } = require("../services/npmAuditService");
+// backend/API/controllers/scan.js
 
-async function scanRepo(req, res) {
+const { prepareRepo } = require('../services/repoService');
+const { runNpmAudit } = require('../services/npmAuditService');
+const { runSemgrep } = require('../services/semgrepService');
+
+exports.scanRepo = async (req, res) => {
   try {
     const { githubUrl } = req.body;
+    console.log('📥 Reçu githubUrl :', githubUrl);
 
-    if (!githubUrl) {
-      return res.status(400).json({ error: "githubUrl required" });
+    // Validation simple de l'URL
+    if (!githubUrl || !githubUrl.startsWith('https://github.com/')) {
+      return res.status(400).json({ error: 'Invalid githubUrl' });
     }
 
-    // 🟢 Récupère tout
-    const { scanId, projectPath, repoPath } = await prepareRepo(githubUrl);
-    console.log("Project path:", projectPath);
+    // 1) Préparation du repo (clone + npm install/ci)
+    const { projectPath, repoPath, scanId } = await prepareRepo(githubUrl);
+    console.log('📦 prepareRepo OK →', { projectPath, repoPath, scanId });
 
-    // 🟢 Lance audit sur le BON dossier
-    const auditResult = await runNpmAudit(projectPath, scanId);
+    let npmAuditResult = null;
+    let semgrepResult = null;
 
-    res.json({
+    // 2) npm audit - on ne fait PAS planter toute la route si ça casse
+    try {
+      npmAuditResult = await runNpmAudit(projectPath, scanId);
+      console.log('✅ npm audit OK');
+    } catch (e) {
+      console.error('❌ npm audit failed:', e);
+      npmAuditResult = {
+        error: 'npm_audit_failed',
+        message: e.message,
+      };
+    }
+
+    // 3) Semgrep - pareil, on encapsule pour éviter un 500
+    try {
+      semgrepResult = await runSemgrep(projectPath, scanId);
+      console.log('✅ semgrep OK');
+    } catch (e) {
+      console.error('❌ semgrep failed:', e);
+      semgrepResult = {
+        error: 'semgrep_failed',
+        message: e.message,
+      };
+    }
+
+    // 4) Réponse unifiée
+    return res.json({
       scanId,
-      A03: auditResult,
+      projectPath,
+      repoPath,
+      npmAudit: npmAuditResult,
+      semgrep: semgrepResult,
     });
-
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Scan failed" });
+    console.error('🔥 Scan failed (global):', err);
+    return res.status(500).json({
+      error: 'Scan failed',
+      message: err.message,
+    });
   }
-}
-
-module.exports = { scanRepo };
+};
