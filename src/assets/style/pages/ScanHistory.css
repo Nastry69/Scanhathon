@@ -1,0 +1,119 @@
+.history-summary {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 18px;
+}
+
+.history-stat {
+  min-width: 0;
+}
+
+.history-label {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.history-value {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.history-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.history-table-card {
+  margin-bottom: 16px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.history-table th,
+.history-table td {
+  text-align: left;
+  padding: 10px 6px;
+}
+
+.history-table thead {
+  border-bottom: 1px solid #1f2937;
+  color: var(--text-soft);
+}
+
+.history-time {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+/* Badges */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.badge-score-high {
+  background: rgba(34, 197, 94, 0.18);
+  color: #22c55e;
+}
+
+.badge-score-medium {
+  background: rgba(234, 179, 8, 0.18);
+  color: #eab308;
+}
+
+.badge-score-low {
+  background: rgba(248, 113, 113, 0.18);
+  color: #f87171;
+}
+
+.badge-status-ok {
+  background: rgba(22, 163, 74, 0.15);
+  color: #22c55e;
+}
+
+.badge-status-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.badge-status-critical {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+}
+
+.history-pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* Bandeau CI/CD */
+
+.banner-ci {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+  background: linear-gradient(90deg, #1d4ed8, #0f172a);
+}
+
+.banner-ci h2 {
+  margin: 0 0 4px;
+}
+
+.banner-ci p {
+  margin: 0;
+  font-size: 13px;
+  color: #e5e7eb;
+}

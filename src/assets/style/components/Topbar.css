@@ -1,0 +1,77 @@
+.topbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid #020617;
+  position: relative;
+}
+
+.topbar-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-nav-link {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  text-decoration: none;
+}
+
+.topbar-nav-link:hover {
+  color: #f1f5f9;
+  background: #1f2937;
+}
+
+.topbar-nav-link.active {
+  color: #2563eb;
+  background: #0B1020;
+}
+
+.topbar-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  letter-spacing: 0.02em;
+}
+
+.topbar-btn {
+  background: transparent;
+  border: 1px solid #1f2937;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-left: 10px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.topbar-btn:hover {
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+
+.topbar-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 10px;
+}
