@@ -1,5 +1,6 @@
 const { prepareRepo } = require("../services/repoService");
 const { runNpmAudit } = require("../services/npmAuditService");
+const { runEslint } = require("../services/eslintService");
 
 async function scanRepo(req, res) {
   try {
@@ -15,10 +16,12 @@ async function scanRepo(req, res) {
 
     // 🟢 Lance audit sur le BON dossier
     const auditResult = await runNpmAudit(projectPath, scanId);
+    const eslintResult = await runEslint(projectPath, scanId);
 
     res.json({
       scanId,
       A03: auditResult,
+      A05: eslintResult,
     });
 
   } catch (err) {
