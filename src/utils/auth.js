@@ -1,23 +1,11 @@
-// Récupérer le token (stocké par le back après login)
-export const getToken = () => localStorage.getItem("token");
+const TOKEN_KEY = "token";
 
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
 
-export const setToken = (token) => {
-  localStorage.setItem("token", token);
-};
+export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
 
-// Savoir si l'utilisateur est "connecté"
-export const isAuthenticated = () => {
-  return !!localStorage.getItem("token");
-};
+export const removeToken = () => localStorage.removeItem(TOKEN_KEY);
 
-// Sauvegarder le token après un login réussi
-// → l'autre développeur branchera ça après l'appel à l'API
-export const login = (token) => {
-  localStorage.setItem("authToken", token);
-};
+export const logout = () => removeToken();
 
-// Déconnexion → on supprime le token
-export const logout = () => {
-  localStorage.removeItem("token");
-};
+export const isAuthenticated = () => !!localStorage.getItem(TOKEN_KEY);

@@ -2,9 +2,38 @@
   height: 56px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 28px;
   border-bottom: 1px solid #020617;
+}
+
+.topbar-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  letter-spacing: 0.02em;
+}
+
+.topbar-btn {
+  background: transparent;
+  border: 1px solid #1f2937;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-left: 10px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.topbar-btn:hover {
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+
+.topbar-icon-btn--active {
+  border-color: #22c55e;
+  color: #22c55e;
 }
 
 .topbar-icon-btn {

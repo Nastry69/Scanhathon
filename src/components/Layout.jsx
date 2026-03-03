@@ -1,11 +1,13 @@
 import React from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import { useAuth } from "../utils/AuthContext";
 
 
 /** Configuration du Layout */
 const Layout = ({ children }) => {
-  const loggedIn = !!localStorage.getItem("token");
+  const { loggedIn } = useAuth();
+
   return (
     /** Conteneur principal */
     <div className="app-root">

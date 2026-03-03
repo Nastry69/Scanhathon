@@ -5,16 +5,10 @@ const Sidebar = () => {
   return (
     /** Element sidebar */
     <aside className="sidebar">
-    {/* Zone branding / identité produit */}
-      <div className="sidebar-logo">
-        <div className="logo-icon">🔒</div>
-        <span className="logo-text">ScanHathon</span>
-      </div>
-
-    {/* Navigation principale */}
+      {/* Navigation principale */}
       <nav className="sidebar-nav">
 
-    {/** Navigation des routes */}
+        {/** Navigation des routes */}
         <NavLink
           to="/analyses/resultat"
           className={({ isActive }) =>
@@ -43,7 +37,7 @@ const Sidebar = () => {
         </NavLink>
       </nav>
 
-    {/* Zone secondaire en bas de la sidebar */}
+      {/* Zone secondaire en bas de la sidebar */}
       <div className="sidebar-footer">
         <button className="sidebar-help">Aide</button>
       </div>

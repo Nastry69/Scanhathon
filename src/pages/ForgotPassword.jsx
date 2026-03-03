@@ -41,7 +41,7 @@ const ForgotPassword = () => {
         </form>
 
         <div className="auth-footer">
-          <Link to="/login" className="btn-link">
+          <Link to="/authpage" className="btn-link">
             Retour à la connexion
           </Link>
         </div>
