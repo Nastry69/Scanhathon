@@ -95,6 +95,32 @@ router.put('/me', authMiddleware, async (req, res) => {
     }
 })
 
+// PUT /api/users/me/password
+router.put('/me/password', authMiddleware, async (req, res) => {
+    try {
+        const { password, newPassword } = req.body
+
+        if (!password || !newPassword)
+            return res.status(400).json({ error: 'Current password and new password are required' })
+
+        if (newPassword.length < 6)
+            return res.status(400).json({ error: 'New password must be at least 6 characters' })
+
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: req.user.email,
+            password
+        })
+        if (signInError) return res.status(401).json({ error: 'Current password is incorrect' })
+
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(req.user.id, { password: newPassword })
+        if (error) throw error
+
+        res.json({ message: 'Password updated successfully' })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+})
+
 // DELETE /api/users/me
 router.delete('/me', authMiddleware, async (req, res) => {
     try {

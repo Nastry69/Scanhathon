@@ -171,6 +171,33 @@ export const swaggerSpec = {
                 }
             }
         },
+        '/api/users/me/password': {
+            put: {
+                summary: 'Modifier le mot de passe',
+                tags: ['Users'],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                required: ['password', 'newPassword'],
+                                properties: {
+                                    password: { type: 'string', format: 'password', description: 'Mot de passe actuel' },
+                                    newPassword: { type: 'string', format: 'password', minLength: 6, description: 'Nouveau mot de passe' },
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: { description: 'Mot de passe mis à jour', content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
+                    400: { description: 'Données invalides', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                    401: { description: 'Mot de passe actuel incorrect', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                    500: { description: 'Erreur serveur', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                }
+            }
+        },
         '/api/analyses': {
             get: {
                 summary: "Lister les analyses de l'utilisateur courant",
