@@ -10,10 +10,22 @@ const NewScan = () => {
   const navigate = useNavigate();
   const { loggedIn } = useAuth();
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    // ici tu pourrais appeler /api/scans, mais on reste full front
-    navigate("/analyses/en-cours");
+    if (!githubUrl) return;
+
+    try {
+      const response = await fetch("http://localhost:3001/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ githubUrl })
+      });
+      if (!response.ok) throw new Error("Erreur API");
+      const { scanId } = await response.json();
+      navigate("/analyses/en-cours", { state: { scanId } });
+    } catch (err) {
+      alert("Erreur lors de l’analyse !");
+    }
   };
 
   const onFileChange = (e) => {

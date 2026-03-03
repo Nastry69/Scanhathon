@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import StatCard from "../components/StatCard";
 import Tag from "../components/Tag";
 import { jsPDF } from "jspdf";
@@ -6,226 +7,29 @@ import { jsPDF } from "jspdf";
 
 /** Page Résultat du scan */
 const ScanResult = () => {
-  const vulns = [
-    {
-      id: "CVE-2023-4567",
-      severity: "Critique",
-      severityVariant: "critical",
-      title: "Injection SQL non protégée sur l’API d’authentification",
-      code: "CVE-2023-4567",
-      description:
-        "L’entrée utilisateur n’est pas correctement nettoyée avant l’exécution de la requête.",
-    },
-    {
-      id: "OWASP-AB2",
-      severity: "Élevée",
-      severityVariant: "high",
-      title: "Cryptographie défaillante sur les cookies de session",
-      code: "OWASP-AB2",
-      description:
-        "Utilisation d’un algorithme de hachage obsolète (MD5) pour les identifiants de session.",
-    },
-    {
-      id: "HTTP-HEADERS",
-      severity: "Moyenne",
-      severityVariant: "medium",
-      title: "En-têtes de sécurité HSTS manquants",
-      code: "HTTP-HEADERS",
-      description:
-        "La directive Strict-Transport-Security n’est pas activée sur le domaine principal.",
-    },
-  ];
+  const location = useLocation();
+  const scanId = location.state?.scanId;
+  const [eslintResult, setEslintResult] = useState(null);
+  const [npmAuditResult, setNpmAuditResult] = useState(null);
 
-const handleDownloadPdf = () => {
-  const doc = new jsPDF();
-
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const marginX = 14;
-  const contentWidth = pageWidth - marginX * 2;
-
-  // ========== BANDEAU HEADER ==========
-  doc.setFillColor(37, 99, 235); // bleu
-  doc.rect(0, 0, pageWidth, 28, "F");
-
-  doc.setTextColor(255);
-  doc.setFontSize(18);
-  doc.setFont(undefined, "bold");
-  doc.text("ScanHathon - Rapport d'analyse de sécurité", marginX, 18);
-
-  doc.setFontSize(10);
-  doc.setFont(undefined, "normal");
-  doc.text("Basé sur OWASP Top 10 et bonnes pratiques", marginX, 24);
-
-  // On repasse en texte normal
-  let y = 36;
-
-  // ========== INFO GLOBALE ==========
-  doc.setTextColor(0);
-  doc.setFontSize(13);
-  doc.setFont(undefined, "bold");
-  doc.text("Résumé de l'analyse", marginX, y);
-  y += 6;
-
-  doc.setFontSize(11);
-  doc.setFont(undefined, "normal");
-  doc.setTextColor(60);
-
-  const resumeLines = [
-    "Score global : 72/100",
-    "Vulnérabilités : 3 Critique - 5 Élevée - 4 Moyenne",
-    "Périmètre : vérification des risques A03 (Injection), A04 (Cryptographic Failures), A05 (Security Misconfiguration).",
-  ];
-
-  resumeLines.forEach((line) => {
-    const wrapped = doc.splitTextToSize(line, contentWidth);
-    doc.text(wrapped, marginX, y);
-    y += wrapped.length * 5;
-  });
-
-  y += 6;
-
-  // LIGNE DE SÉPARATION
-  doc.setDrawColor(220);
-  doc.line(marginX, y, pageWidth - marginX, y);
-  y += 8;
-
-  // ========== SECTION VULNÉRABILITÉS ==========
-  doc.setTextColor(0);
-  doc.setFontSize(13);
-  doc.setFont(undefined, "bold");
-  doc.text("Vulnérabilités détectées", marginX, y);
-  y += 8;
-
-  doc.setFontSize(11);
-  doc.setFont(undefined, "normal");
-
-  const ensureSpace = (needed) => {
-    if (y + needed > pageHeight - 20) {
-      doc.addPage();
-      y = 20;
-    }
-  };
-
-  vulns.forEach((v, index) => {
-    ensureSpace(40);
-
-    // "Carte" de vulnérabilité : fond léger
-    const cardTop = y - 3;
-    const cardHeight = 30; // on l'ajuste après
-    doc.setFillColor(247, 248, 250);
-    doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(marginX - 2, cardTop, contentWidth + 4, cardHeight, 2, 2, "S");
-
-    y += 2;
-
-    // Titre
-    doc.setTextColor(0);
-    doc.setFont(undefined, "bold");
-    const title = `${index + 1}. [${v.code}] ${v.title}`;
-    const titleLines = doc.splitTextToSize(title, contentWidth - 40);
-    doc.text(titleLines, marginX + 2, y);
-    const titleBlockHeight = titleLines.length * 5;
-    y += titleBlockHeight + 2;
-
-    // Badge sévérité (petit rectangle coloré)
-    let badgeColor;
-    switch (v.severity) {
-      case "Critique":
-        badgeColor = [247, 37, 37];
-        break;
-      case "Élevée":
-        badgeColor = [242, 82, 2];
-        break;
-      case "Moyenne":
-        badgeColor = [217, 168, 43];
-        break;
-      default:
-        badgeColor = [123, 166, 237];
-        break;
-    }
-
-    const badgeText = `Sévérité : ${v.severity}`;
-    doc.setFontSize(10);
-    doc.setFont(undefined, "bold");
-    doc.setTextColor(255);
-    const badgeWidth = doc.getTextWidth(badgeText) + 6;
-
-    doc.setFillColor(...badgeColor);
-    doc.roundedRect(marginX + 2, y - 4, badgeWidth, 7, 1.5, 1.5, "F");
-    doc.text(badgeText, marginX + 5, y + 1);
-
-    y += 8;
-
-    // Description
-    doc.setFontSize(11);
-    doc.setFont(undefined, "normal");
-    doc.setTextColor(80);
-    const descLines = doc.splitTextToSize(v.description, contentWidth - 4);
-    doc.text(descLines, marginX + 2, y);
-    y += descLines.length * 5 + 6;
-
-    // Petite marge après chaque carte
-    y += 2;
-
-    // on pourrait recalculer la vraie hauteur de la card et redessiner, mais pour un hackathon c'est suffisant visuellement
-  });
-
-  // Ligne de séparation avant les recos
-  ensureSpace(30);
-  doc.setDrawColor(220);
-  doc.line(marginX, y, pageWidth - marginX, y);
-  y += 8;
-
-  // ========== SECTION RECOMMANDATIONS ==========
-  doc.setFontSize(13);
-  doc.setFont(undefined, "bold");
-  doc.setTextColor(0);
-  doc.text("Corrections suggérées (OWASP Top 10)", marginX, y);
-  y += 8;
-
-  doc.setFontSize(11);
-  doc.setFont(undefined, "normal");
-  doc.setTextColor(60);
-
-  const reco = [
-    "A03:2021 - Injection : Utiliser des requêtes paramétrées (Prepared Statements) pour toutes les interactions avec la base de données.",
-    "A02:2021 - Cryptographic Failures : Migrer vers Argon2id ou bcrypt avec un coût adapté pour les mots de passe.",
-    "A05:2021 - Security Misconfiguration : Ajouter l’en-tête Strict-Transport-Security avec max-age=63072000; includeSubDomains.",
-  ];
-
-  reco.forEach((line, idx) => {
-    ensureSpace(20);
-
-    // Sous-titre de la reco
-    doc.setFont(undefined, "bold");
-    doc.setTextColor(30);
-    const label = line.split(" : ")[0]; // "A03:2021 - Injection"
-    doc.text(`• ${label}`, marginX, y);
-    y += 5;
-
-    // Texte détaillé
-    doc.setFont(undefined, "normal");
-    doc.setTextColor(70);
-    const text = line.substring(label.length + 3); // après " : "
-    const wrapped = doc.splitTextToSize(text, contentWidth - 6);
-    doc.text(wrapped, marginX + 4, y);
-    y += wrapped.length * 5 + 4;
-  });
-
-  // ========== FOOTER ==========
-  const dateStr = new Date().toLocaleDateString("fr-FR");
-  const footerText = `ScanHathon • Rapport généré le ${dateStr}`;
-  doc.setFontSize(9);
-  doc.setTextColor(130);
-  doc.text(
-    footerText,
-    marginX,
-    pageHeight - 8
+  useEffect(() => {
+    if (!scanId) return;
+    fetch(`http://localhost:3001/scans/${scanId}/eslint.json`)
+      .then(res => res.json())
+      .then(setEslintResult);
+    fetch(`http://localhost:3001/scans/${scanId}/npm-audit.json`)
+      .then(res => res.json())
+      .then(setNpmAuditResult);
+  }, [scanId]);
+  return (
+    <div className="page-wrapper">
+      <h1>Résultat du scan</h1>
+      <h2>ESLint</h2>
+      <pre>{eslintResult ? JSON.stringify(eslintResult, null, 2) : "Chargement..."}</pre>
+      <h2>NPM Audit</h2>
+      <pre>{npmAuditResult ? JSON.stringify(npmAuditResult, null, 2) : "Chargement..."}</pre>
+    </div>
   );
-
-  doc.save("rapport-securite.pdf");
-};
 
   return (
     <div className="page-wrapper">

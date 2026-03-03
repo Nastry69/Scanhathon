@@ -10,18 +10,22 @@ async function scanRepo(req, res) {
       return res.status(400).json({ error: "githubUrl required" });
     }
 
-    // 🟢 Récupère tout
+    // 1. Prépare le repo et récupère le scanId
     const { scanId, projectPath, repoPath } = await prepareRepo(githubUrl);
     console.log("Project path:", projectPath);
 
-    // 🟢 Lance audit sur le BON dossier
-    const auditResult = await runNpmAudit(projectPath, scanId);
-    const eslintResult = await runEslint(projectPath, scanId);
+    // 2. Répond immédiatement au front
+    res.json({ scanId });
 
-    res.json({
-      scanId,
-      A03: auditResult,
-      A05: eslintResult,
+    // 3. Lance l'analyse en tâche de fond
+    setImmediate(async () => {
+      try {
+        await runNpmAudit(projectPath, scanId);
+        await runEslint(projectPath, scanId);
+        console.log(`Scan terminé pour ${scanId}`);
+      } catch (err) {
+        console.error(`Erreur lors du scan ${scanId}:`, err);
+      }
     });
 
   } catch (err) {
