@@ -37,14 +37,56 @@
 // module.exports = { scanRepo };
 // backend/API/controllers/scan.js
 
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const { v4: uuidv4 } = require("uuid");
+const { exec } = require("child_process");
+const { extractZip, findRepoRoot } = require("../services/zipService");
 const { prepareRepo } = require('../services/repoService');
 const { runNpmAudit } = require('../services/npmAuditService');
 const { runSemgrep } = require('../services/semgrepService');
 const { runSnyk } = require('../services/snykService');
 const { runEslint } = require("../services/eslintService");
 
+const upload = multer({ dest: "tmp/" });
+exports.uploadZip = upload.single("zip");
+
 exports.scanRepo = async (req, res) => {
   try {
+
+    let projectPath;
+    let repoPath;
+    let scanId;
+
+    // =============================
+    // CAS 1 : ZIP UPLOAD
+    // =============================
+    if (req.file) {
+
+      const zipPath = req.file.path;
+      scanId = uuidv4();
+      repoPath = path.join(__dirname, "../scans", scanId);
+      fs.mkdirSync(repoPath, { recursive: true });
+      
+      await extractZip(zipPath, repoPath);
+      projectPath = await findRepoRoot(repoPath);
+      fs.unlinkSync(zipPath);
+
+      await new Promise((resolve, reject) => {
+        exec("npm install", { cwd: projectPath }, (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    }
+
+
+    // =============================
+    // CAS 2 : URL GITHUB
+    // =============================
+
+    else {
     const { githubUrl } = req.body;
 
     // Validation simple de l'URL
@@ -53,12 +95,22 @@ exports.scanRepo = async (req, res) => {
     }
 
     // 1) Préparation du repo (clone + npm install/ci)
-    const { projectPath, repoPath, scanId } = await prepareRepo(githubUrl);
+    const prepared = await prepareRepo(githubUrl);
+
+      projectPath = prepared.projectPath;
+      repoPath = prepared.repoPath;
+      scanId = prepared.scanId;
+
+    }
+
+    // ============================
+    // ANALYSE
+    // ============================
 
     let npmAuditResult = null;
+    let eslintResult = null;
     let semgrepResult = null;
     let snykresult = null;
-    let eslintResult = null;
 
     // 2) npm audit 
     try {
@@ -71,7 +123,7 @@ exports.scanRepo = async (req, res) => {
     }
     // 3) ESLint
     try {
-      await runEslint(projectPath, scanId);
+      eslintResult = await runEslint(projectPath, scanId);
     } catch (e) {
       // On ignore les erreurs d'ESLint pour ne pas bloquer les autres analyses
       console.error(`ESLint failed for ${scanId}:`, e);

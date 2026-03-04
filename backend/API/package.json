@@ -15,9 +15,11 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "multer": "^2.1.0",
     "semgrep": "^0.0.1",
     "simple-git": "^3.32.3",
     "snyk": "^1.1303.0",
+    "unzipper": "^0.12.3",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

@@ -34,12 +34,29 @@ async function prepareRepo(githubUrl) {
       else resolve();
     });
   });
-
-  return {
-    scanId,
-    repoPath,
-    projectPath: repoPath
-  };
+  return { scanId, repoPath, projectPath: repoPath };
 }
 
-module.exports = { prepareRepo };
+  async function prepareRepoFromLocalPath(projectPath, scanId, repoPath = projectPath) {
+    // On suppose que package.json est à la racine du projectPath
+    const packageJsonPath = path.join(projectPath, "package.json");
+
+    if (!fs.existsSync(packageJsonPath)) {
+      throw new Error("No package.json found at repository root");
+    }
+
+    const hasLock = fs.existsSync(path.join(projectPath, "package-lock.json"));
+
+    await new Promise((resolve, reject) => {
+      const command = hasLock ? "npm ci" : "npm install";
+      exec(command, { cwd: projectPath }, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    return { scanId, repoPath, projectPath };
+  }
+
+
+module.exports = { prepareRepo, prepareRepoFromLocalPath };
