@@ -13,7 +13,7 @@ async function prepareRepo(githubUrl) {
   // Clone repo
   await simpleGit().clone(githubUrl, repoPath);
 
-  // 🔥 Maintenant on suppose que package.json est à la racine
+  // On suppose que package.json est à la racine
   const packageJsonPath = path.join(repoPath, "package.json");
 
   if (!fs.existsSync(packageJsonPath)) {
