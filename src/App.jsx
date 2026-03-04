@@ -14,13 +14,14 @@ const App = () => {
     <Layout>
       <Routes>
         <Route path="/" element={<NewScan />} />
+        <Route path="/analyses/en-cours" element={<ScanInProgress />} />
         <Route path="/analyses/resultat" element={<ScanResult />} />
         <Route path="/analyses/historique" element={<ScanHistory />} />
         <Route path="/authpage" element={<AuthPage defaultView="login" />} />
         <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
         <Route path="/profile" element={<Profile />} />
         {/* fallback */}
-        <Route path="*" element={<Navigate to="/analyses/nouveau" />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Layout>
   );
