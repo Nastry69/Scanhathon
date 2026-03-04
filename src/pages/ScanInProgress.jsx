@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 /** Page de l'analyse */
 const ScanInProgress = () => {
   const [progress, setProgress] = useState(0);
+  const [scanReady, setScanReady] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const scanId = location.state?.scanId;
 
   useEffect(() => {
-    // Fausse progression + redirection vers le résultat
+    // Fausse progression
     const interval = setInterval(() => {
       setProgress((p) => {
         if (p >= 100) return 100;
@@ -15,32 +18,46 @@ const ScanInProgress = () => {
       });
     }, 150);
 
-    const timeout = setTimeout(() => {
-      navigate("/analyses/resultat");
-    }, 8000); // environ 8s
+    // Polling pour vérifier la création des fichiers JSON
+    const pollInterval = setInterval(async () => {
+      if (!scanId) return;
+      try {
+        const res1 = await fetch(`http://localhost:3001/scans/${scanId}/eslint.json`);
+        const res2 = await fetch(`http://localhost:3001/scans/${scanId}/npm-audit.json`);
+        if (res1.ok && res2.ok) {
+          setScanReady(true);
+        }
+      } catch (err) {
+        // ignore
+      }
+    }, 2000);
 
     return () => {
       clearInterval(interval);
-      clearTimeout(timeout);
+      clearInterval(pollInterval);
     };
-  }, [navigate]);
+  }, [scanId]);
+
+  useEffect(() => {
+    if (scanReady && scanId) {
+      navigate("/analyses/resultat", { state: { scanId } });
+    }
+  }, [scanReady, scanId, navigate]);
 
   // Calcul de l'angle du cercle en fonction du pourcentage
   const progressAngle = progress * 3.6;
 
   return (
     <div className="page-wrapper">
-    
-    {/* Titre + description du contexte */}
+      {/* Titre + description du contexte */}
       <h1 className="page-title">Analyse de sécurité active</h1>
       <p className="page-subtitle">
         Nous examinons actuellement votre infrastructure pour identifier les
         vulnérabilités potentielles.
       </p>
 
-    {/* Carte principale contenant l’indicateur de progression + détails des étapes */}
+      {/* Carte principale contenant l’indicateur de progression + détails des étapes */}
       <div className="card inprogress-card">
-
         {/* Colonne gauche : cercle de progression */}
         <div className="progress-circle-wrapper">
           <div className="progress-circle"
@@ -51,7 +68,6 @@ const ScanInProgress = () => {
                       )`
             }}>
             <div className="progress-circle-inner">
-
               {/* Pourcentage d’avancement affiché au centre du cercle */}
               <span className="progress-value">{progress}%</span>
               <span className="progress-label">Analyse en cours</span>
@@ -59,10 +75,9 @@ const ScanInProgress = () => {
           </div>
         </div>
 
-    {/* Colonne droite : liste des étapes de l’analyse */}
+        {/* Colonne droite : liste des étapes de l’analyse */}
         <div className="progress-list">
-    
-    {/* Étape 1 : terminée */}
+          {/* Étape 1 : terminée */}
           <div className="progress-item done">
             <div className="progress-item-header">
               <span className="status-icon">✅</span>
@@ -76,7 +91,7 @@ const ScanInProgress = () => {
             </p>
           </div>
 
-    {/* Étape 2 : en cours */}
+          {/* Étape 2 : en cours */}
           <div className="progress-item active">
             <div className="progress-item-header">
               <span className="status-icon">⚡</span>
@@ -90,7 +105,7 @@ const ScanInProgress = () => {
             </p>
           </div>
 
-    {/* Étape 3 : en file d’attente */}
+          {/* Étape 3 : en file d’attente */}
           <div className="progress-item queued">
             <div className="progress-item-header">
               <span className="status-icon">⏳</span>
@@ -104,7 +119,7 @@ const ScanInProgress = () => {
             </p>
           </div>
 
-    {/* Étape 4 : en file d’attente */}
+          {/* Étape 4 : en file d’attente */}
           <div className="progress-item queued">
             <div className="progress-item-header">
               <span className="status-icon">⏳</span>
@@ -119,7 +134,7 @@ const ScanInProgress = () => {
           </div>
         </div>
 
-    {/* Actions utilisateur (non connectées pour l’instant) */}
+        {/* Actions utilisateur (non connectées pour l’instant) */}
         <div className="inprogress-actions">
           <button className="btn-secondary">Mettre en pause</button>
           <button className="btn-danger">Annuler l’analyse</button>
