@@ -10,7 +10,9 @@ create extension if not exists "uuid-ossp";
 create table public.users (
   id            uuid primary key references auth.users(id) on delete cascade,
   username      varchar(255),
-  created_at    timestamp with time zone default now()
+  created_at    timestamp with time zone default now(),
+  github_access_token text,
+  github_username text
 );
 
 

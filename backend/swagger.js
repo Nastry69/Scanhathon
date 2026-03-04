@@ -22,6 +22,7 @@ export const swaggerSpec = {
                 properties: {
                     id: { type: 'string', format: 'uuid' },
                     username: { type: 'string' },
+                    github_username: { type: 'string', nullable: true },
                     created_at: { type: 'string', format: 'date-time' },
                 }
             },
@@ -33,6 +34,8 @@ export const swaggerSpec = {
                     repo_url: { type: 'string' },
                     repo_name: { type: 'string' },
                     branch: { type: 'string' },
+                    status: { type: 'string', enum: ['pending', 'running', 'completed', 'failed'] },
+                    score: { type: 'integer', minimum: 0, maximum: 100, nullable: true },
                     created_at: { type: 'string', format: 'date-time' },
                 }
             },
@@ -41,12 +44,15 @@ export const swaggerSpec = {
                 properties: {
                     id: { type: 'string', format: 'uuid' },
                     analysis_id: { type: 'string', format: 'uuid' },
-                    tool: { type: 'string' },
-                    severity: { type: 'string', enum: ['low', 'medium', 'high', 'critical'] },
+                    tool: { type: 'string', enum: ['npm_audit', 'snyk', 'eslint', 'semgrep'] },
+                    severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low', 'info'] },
                     title: { type: 'string' },
-                    description: { type: 'string' },
-                    file: { type: 'string' },
-                    line: { type: 'integer' },
+                    description: { type: 'string', nullable: true },
+                    file_path: { type: 'string', nullable: true },
+                    line_start: { type: 'integer', nullable: true },
+                    code_snippet: { type: 'string', nullable: true },
+                    recommendation: { type: 'string', nullable: true },
+                    raw: { type: 'object', nullable: true },
                     created_at: { type: 'string', format: 'date-time' },
                 }
             },
@@ -285,6 +291,88 @@ export const swaggerSpec = {
                 responses: {
                     200: { description: 'Liste des vulnérabilités filtrées', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Vulnerability' } } } } },
                     401: { description: 'Non authentifié' },
+                    500: { description: 'Erreur serveur', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                }
+            }
+        },
+        '/auth/github': {
+            get: {
+                summary: 'Initier le flow OAuth GitHub',
+                tags: ['GitHub'],
+                security: [],
+                parameters: [
+                    { in: 'query', name: 'token', required: true, schema: { type: 'string' }, description: 'JWT Supabase de la session courante' }
+                ],
+                responses: {
+                    302: { description: 'Redirection vers GitHub OAuth' },
+                    400: { description: 'Token manquant' },
+                }
+            }
+        },
+        '/auth/github/exchange': {
+            post: {
+                summary: 'Échanger le code OAuth contre un token GitHub',
+                tags: ['GitHub'],
+                security: [],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                required: ['code', 'state'],
+                                properties: {
+                                    code: { type: 'string' },
+                                    state: { type: 'string' },
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: { description: 'GitHub connecté', content: { 'application/json': { schema: { type: 'object', properties: { github_username: { type: 'string' } } } } } },
+                    400: { description: 'Code ou state invalide', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                    401: { description: 'Session invalide', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                    500: { description: 'Erreur serveur', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                }
+            }
+        },
+        '/auth/github/disconnect': {
+            delete: {
+                summary: 'Déconnecter GitHub',
+                tags: ['GitHub'],
+                responses: {
+                    200: { description: 'GitHub déconnecté', content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
+                    401: { description: 'Non authentifié', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                    500: { description: 'Erreur serveur', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                }
+            }
+        },
+        '/auth/github/repos': {
+            get: {
+                summary: 'Lister les repos GitHub de l\'utilisateur connecté',
+                tags: ['GitHub'],
+                responses: {
+                    200: {
+                        description: 'Liste des repos',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            id: { type: 'integer' },
+                                            name: { type: 'string' },
+                                            full_name: { type: 'string' },
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    400: { description: 'GitHub non connecté', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                    401: { description: 'Non authentifié', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
                     500: { description: 'Erreur serveur', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
                 }
             }

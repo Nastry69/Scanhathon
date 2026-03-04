@@ -6,6 +6,7 @@ import ScanResult from "./pages/ScanResult";
 import ScanHistory from "./pages/ScanHistory";
 import AuthPage from "./pages/AuthPage";
 import Profile from "./pages/Profile";
+import GithubCallback from "./pages/GithubCallback";
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/analyses/historique" element={<ScanHistory />} />
         <Route path="/authpage" element={<AuthPage defaultView="login" />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/auth/github/callback" element={<GithubCallback />} />
         <Route path="*" element={<NewScan />} />
       </Routes>
     </Layout>
