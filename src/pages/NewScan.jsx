@@ -25,7 +25,7 @@ const NewScan = () => {
       const response = await fetch("http://localhost:3001/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ githubUrl })
+        body: JSON.stringify({ githubUrl, userId: user?.id ?? null })
       });
       if (!response.ok) throw new Error("Erreur API");
       const { scanId } = await response.json();
@@ -60,7 +60,11 @@ const NewScan = () => {
                 value={selectedRepo}
                 onChange={(e) => {
                   setSelectedRepo(e.target.value);
-                  if (e.target.value) setGithubUrl("");
+                  if (e.target.value) {
+                    setGithubUrl(`https://github.com/${e.target.value}`);
+                  } else {
+                    setGithubUrl("");
+                  }
                 }}
               >
                 <option value="">-- Sélectionner un repository --</option>

@@ -7,6 +7,7 @@ import ScanHistory from "./pages/ScanHistory";
 import AuthPage from "./pages/AuthPage";
 import Profile from "./pages/Profile";
 import GithubCallback from "./pages/GithubCallback";
+import ScanInProgress from "./pages/ScanInProgress";
 
 const App = () => {
   return (
