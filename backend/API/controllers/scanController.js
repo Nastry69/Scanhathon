@@ -53,7 +53,9 @@ exports.scanRepo = async (req, res) => {
     }
 
     // 1) Préparation du repo (clone + npm install/ci)
+    console.log('[SCAN] Préparation du repo...');
     const { projectPath, repoPath, scanId } = await prepareRepo(githubUrl);
+    console.log(`[SCAN] Repo prêt : ${projectPath}`);
 
     let npmAuditResult = null;
     let semgrepResult = null;
@@ -62,42 +64,53 @@ exports.scanRepo = async (req, res) => {
 
     // 2) npm audit 
     try {
+      console.log(`[SCAN] Lancement npm audit pour ${scanId}`);
       npmAuditResult = await runNpmAudit(projectPath, scanId);
+      console.log(`[SCAN] npm audit terminé pour ${scanId}`);
     } catch (e) {
+      console.error(`[SCAN] Erreur npm audit pour ${scanId}:`, e);
       npmAuditResult = {
         error: 'npm_audit_failed',
         message: e.message,
       };
     }
+
     // 3) ESLint
     try {
-      await runEslint(projectPath, scanId);
+      console.log(`[SCAN] Lancement ESLint pour ${scanId}`);
+      eslintResult = await runEslint(projectPath, scanId);
+      console.log(`[SCAN] ESLint terminé pour ${scanId}`);
     } catch (e) {
-      // On ignore les erreurs d'ESLint pour ne pas bloquer les autres analyses
-      console.error(`ESLint failed for ${scanId}:`, e);
+      console.error(`[SCAN] ESLint failed for ${scanId}:`, e);
     }
 
-    // 3) Semgrep 
+    // 4) Semgrep 
     try {
+      console.log(`[SCAN] Lancement Semgrep pour ${scanId}`);
       semgrepResult = await runSemgrep(projectPath, scanId);
+      console.log(`[SCAN] Semgrep terminé pour ${scanId}`);
     } catch (e) {
+      console.error(`[SCAN] Erreur Semgrep pour ${scanId}:`, e);
       semgrepResult = {
         error: 'semgrep_failed',
         message: e.message,
       };
     }
 
-    // 4) SNYK
-    try{
+    // 5) SNYK
+    try {
+      console.log(`[SCAN] Lancement Snyk pour ${scanId}`);
       snykresult = await runSnyk(projectPath, scanId);
+      console.log(`[SCAN] Snyk terminé pour ${scanId}`);
     } catch (e) {
+      console.error(`[SCAN] Erreur Snyk pour ${scanId}:`, e);
       snykresult = {
         error: 'snyk_failed',
         message: e.message,
       };
     }
 
-    // 5) Réponse unifiée
+    // 6) Réponse unifiée
     return res.json({
       scanId,
       projectPath,
@@ -108,6 +121,7 @@ exports.scanRepo = async (req, res) => {
       snyk: snykresult,
     });
   } catch (err) {
+    console.error('[SCAN] Erreur générale du scan :', err);
     return res.status(500).json({
       error: 'Scan failed',
       message: err.message,
