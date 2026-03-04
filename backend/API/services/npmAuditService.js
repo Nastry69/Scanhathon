@@ -14,7 +14,7 @@ function runNpmAudit(projectPath, scanId) {
       try {
         const result = stdout ? JSON.parse(stdout) : {};
 
-        // 🔥 Sauvegarde automatique dans scans/<scanId>/
+        // Sauvegarde automatique dans scans/<scanId>/
         const scanFolder = path.join(__dirname, "../scans", scanId);
 
         fs.mkdirSync(scanFolder, { recursive: true });

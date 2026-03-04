@@ -4,7 +4,6 @@ const path = require("path");
 
 function runSemgrep(projectPath, scanId) {
   return new Promise((resolve, reject) => {
-    console.log("🔥 runSemgrep appelé avec :", projectPath, scanId);
     exec(
       `semgrep --config auto "${projectPath}" --json`,
       {
@@ -21,6 +20,7 @@ function runSemgrep(projectPath, scanId) {
           return reject(err);
         }
 
+        // Sauvegarde automatique dans scans/<scanId>/
         try {
           const result = stdout ? JSON.parse(stdout) : {};
 

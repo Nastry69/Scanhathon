@@ -5,7 +5,6 @@ const path = require('path');
 
 function runSnyk(projectPath, scanId) {
   return new Promise((resolve, reject) => {
-    console.log('🔥 runSnyk appelé avec :', projectPath, scanId);
     exec(`snyk code test --json`, {
       cwd: projectPath,
       env: {
@@ -17,6 +16,8 @@ function runSnyk(projectPath, scanId) {
       if (err && !stdout) {
         return reject(err);
       }
+
+      // Sauvegarde automatique dans scans/<scanId>/
       try {
                 const result = stdout ? JSON.parse(stdout) : {};
       

@@ -12,10 +12,6 @@ app.use(express.json());
 // Route principale
 app.post("/scan", scanRepo);
 
-// verife
-console.log('SEMGREP_APP_TOKEN chargé ?', !!process.env.SEMGREP_APP_TOKEN);
-console.log('SNYK_TOKEN chargé ?', !!process.env.SNYK_TOKEN);
-
 // Route test
 app.get("/", (req, res) => {
   res.send("Scanner API running");
