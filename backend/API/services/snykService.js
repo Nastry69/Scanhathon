@@ -5,7 +5,7 @@ const path = require('path');
 
 function runSnyk(projectPath, scanId) {
   return new Promise((resolve, reject) => {
-    exec(`snyk code test --json`, {
+    exec(`snyk test --json`, {
       cwd: projectPath,
       env: {
         ...process.env,
