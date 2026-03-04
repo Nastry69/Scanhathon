@@ -39,9 +39,9 @@
 .input-wrapper {
   display: flex;
   align-items: center;
-  background: #020617;
+  background: #0A0E17;
   border-radius: 12px;
-  border: 1px solid #1f2937;
+  border: 1px solid #1B4D34;
   padding-left: 14px;
   height: 50px;
   gap: 10px;
@@ -88,7 +88,7 @@
   content: "";
   flex: 1;
   height: 1px;
-  background: #1f2937;
+  background: #1B4D34;
 }
 
 /* Dropzone */
@@ -101,22 +101,22 @@
   justify-content: center;
   gap: 10px;
   border-radius: 14px;
-  border: 1.5px dashed #334155;
-  background: linear-gradient(145deg, #020617, #0b1120);
+  border: 1.5px dashed #1B4D34;
+  background: linear-gradient(145deg, #0A0E17, #151E2C);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .dropzone:hover {
   border-color: var(--accent);
-  background: #0b1120;
+  background: #151E2C;
 }
 
 .dropzone-icon-circle {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #111827;
+  background: #151E2C;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,5 +181,5 @@
 
 a {
   text-decoration: none;
-  color: #2563eb;
+  color: #05E575;
 }

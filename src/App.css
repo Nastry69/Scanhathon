@@ -62,25 +62,25 @@
 
 .btn-primary {
   background: var(--accent);
-  color: white;
-  box-shadow: 0 18px 35px rgba(37, 99, 235, 0.45);
-  border: 1px solid #1d4ed8;
+  color: #0A0E17;
+  box-shadow: 0 18px 35px rgba(5, 229, 117, 0.35);
+  border: 1px solid #04c469;
   text-decoration: none;
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  background: #04c469;
 
 }
 
 .btn-secondary {
-  background: #111827;
+  background: #151E2C;
   color: var(--text-main);
-  border: 1px solid #1f2937;
+  border: 1px solid #1B4D34;
 }
 
 .btn-danger {
-  background: #111827;
+  background: #151E2C;
   color: var(--danger);
   border: 1px solid rgba(248, 113, 113, 0.35);
 }
@@ -94,8 +94,8 @@
 }
 
 .btn-chip {
-  background: #020617;
-  border: 1px solid #1f2937;
+  background: #0A0E17;
+  border: 1px solid #1B4D34;
   color: var(--text-muted);
   padding-inline: 12px;
   border-radius: 999px;

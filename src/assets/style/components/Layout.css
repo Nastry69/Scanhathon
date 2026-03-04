@@ -1,7 +1,7 @@
 .app-root {
   display: flex;
   height: 100vh;
-  background: radial-gradient(circle at top, #020617 0, #020617 40%, #000);
+  background: radial-gradient(circle at top, #0A0E17 0, #0A0E17 40%, #000);
 }
 
 .app-main {
@@ -26,7 +26,7 @@
   color: var(--text-soft);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  border-top: 1px solid #0f172a;
+  border-top: 1px solid #0A0E17;
 }
 
 .app-footer-brand {
@@ -36,5 +36,5 @@
 }
 
 .app-footer-sep {
-  color: #1e293b;
+  color: #151E2C;
 }

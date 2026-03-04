@@ -17,16 +17,16 @@
 @import "./assets/style/pages/Profile.css";
 
 :root {
-  --bg-main: #050816;
-  --bg-elevated: #0b1020;
-  --bg-elevated-2: #111827;
-  --border-subtle: #1f2937;
-  --accent: #2563eb;
-  --accent-soft: rgba(37, 99, 235, 0.15);
+  --bg-main: #0A0E17;
+  --bg-elevated: #151E2C;
+  --bg-elevated-2: #151E2C;
+  --border-subtle: #1B4D34;
+  --accent: #05E575;
+  --accent-soft: rgba(5, 229, 117, 0.15);
   --danger: #ef4444;
   --text-main: #f9fafb;
-  --text-muted: #9ca3af;
-  --text-soft: #6b7280;
+  --text-muted: #7D8798;
+  --text-soft: #7D8798;
   --radius-lg: 16px;
   --radius-md: 10px;
   --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.55);
@@ -47,7 +47,7 @@ body,
   height: 100%;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617);
+  background: radial-gradient(circle at top, #0A0E17 0, #0A0E17 40%, #0A0E17);
   color: var(--text-main);
 }
 

@@ -1,7 +1,7 @@
 export const swaggerSpec = {
     openapi: '3.0.0',
     info: {
-        title: 'Scanhathon API',
+        title: 'SecureScan API',
         version: '1.0.0',
         description: 'API de scan de vulnérabilités pour dépôts Git',
     },
