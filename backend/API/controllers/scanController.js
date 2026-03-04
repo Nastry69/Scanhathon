@@ -3,6 +3,7 @@
 const { prepareRepo } = require('../services/repoService');
 const { runNpmAudit } = require('../services/npmAuditService');
 const { runSemgrep } = require('../services/semgrepService');
+const { runSnyk } = require('../services/snykService');
 
 exports.scanRepo = async (req, res) => {
   try {
@@ -20,8 +21,9 @@ exports.scanRepo = async (req, res) => {
 
     let npmAuditResult = null;
     let semgrepResult = null;
+    let snykresult = null;
 
-    // 2) npm audit - on ne fait PAS planter toute la route si ça casse
+    // 2) npm audit 
     try {
       npmAuditResult = await runNpmAudit(projectPath, scanId);
       console.log('✅ npm audit OK');
@@ -33,7 +35,7 @@ exports.scanRepo = async (req, res) => {
       };
     }
 
-    // 3) Semgrep - pareil, on encapsule pour éviter un 500
+    // 3) Semgrep 
     try {
       semgrepResult = await runSemgrep(projectPath, scanId);
       console.log('✅ semgrep OK');
@@ -44,14 +46,28 @@ exports.scanRepo = async (req, res) => {
         message: e.message,
       };
     }
+    
+    // 4) SNYK
+    try{
+      snykresult = await runSnyk(projectPath, scanId);
+      console.log('✅ snyk OK');
+    } catch (e) {
+      console.error('❌ snyk failed:', e);
+      snykresult = {
+        error: 'snyk_failed',
+        message: e.message,
+      };
+    }
 
-    // 4) Réponse unifiée
+
+    // 5) Réponse unifiée
     return res.json({
       scanId,
       projectPath,
       repoPath,
       npmAudit: npmAuditResult,
       semgrep: semgrepResult,
+      snyk: snykresult,
     });
   } catch (err) {
     console.error('🔥 Scan failed (global):', err);
