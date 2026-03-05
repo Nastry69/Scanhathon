@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   setToken,
   removeToken,
@@ -7,12 +7,25 @@ import {
   setStoredUser,
   removeStoredUser,
 } from "./auth";
+import { getMe } from "./api";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [loggedIn, setLoggedIn] = useState(isAuthenticated());
   const [user, setUser] = useState(getStoredUser());
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      getMe()
+        .then((data) => {
+          const updated = { ...getStoredUser(), ...data };
+          setStoredUser(updated);
+          setUser(updated);
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   const login = (token, userData) => {
     setToken(token);
@@ -21,6 +34,13 @@ export const AuthProvider = ({ children }) => {
       setStoredUser(userData);
       setUser(userData);
     }
+    getMe()
+      .then((data) => {
+        const updated = { ...userData, ...data };
+        setStoredUser(updated);
+        setUser(updated);
+      })
+      .catch(() => {});
   };
 
   const logout = () => {

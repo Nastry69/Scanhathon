@@ -54,6 +54,7 @@ create table public.vulnerabilities (
   recommendation  text,
   raw             jsonb,
   created_at      timestamp with time zone default now()
+  A0number        text
 );
 
 create index idx_vulnerabilities_analysis_id on public.vulnerabilities(analysis_id);

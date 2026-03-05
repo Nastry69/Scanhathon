@@ -16,7 +16,7 @@ const ScanHistory = () => {
   }, []);
 
   const handleVoirDetails = (row) => {
-    navigate("/analyses/resultat", { state: { analysisId: row.id, dbScore: row.score } });
+    navigate("/analyses/resultat", { state: { analysisId: row.id, dbScore: row.score, repoName: row.repo_name ?? row.repo_url } });
   };
 
   const formatDate = (iso) => {
@@ -30,7 +30,7 @@ const ScanHistory = () => {
   return (
     <div className="page-wrapper">
 
-    {/* En-tête de page : titre + sous-titre + actions */}
+      {/* En-tête de page : titre + sous-titre + actions */}
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Historique des analyses</h1>
@@ -40,14 +40,13 @@ const ScanHistory = () => {
           </p>
         </div>
 
-    {/* Actions globales de la page (export, nouveau scan) */}
+        {/* Actions globales de la page (export, nouveau scan) */}
         <div className="page-header-actions">
-          <button className="btn-secondary">Exporter CSV</button>
           <Link to="/" className="btn-primary">+ Nouveau scan</Link>
         </div>
       </div>
 
-    {/* Tableau principal listant les scans */}
+      {/* Tableau principal listant les scans */}
       <div className="card history-table-card">
         {loading && <p style={{ padding: "1rem" }}>Chargement…</p>}
         {error && <p style={{ padding: "1rem", color: "red" }}>{error}</p>}
@@ -95,26 +94,6 @@ const ScanHistory = () => {
           </table>
         )}
       </div>
-
-    {/* Bandeau promotionnel pour la fonctionnalité CI/CD */}
-      <div className="card banner-ci">
-        <div>
-          <h2>Automatisez vos analyses de sécurité</h2>
-          <p>
-            Configurez des analyses automatiques lors de chaque commit ou pull
-            request pour sécuriser votre code en continu.
-          </p>
-        </div>
-        <button className="btn-primary">Configurer le CI/CD</button>
-      </div>
-
-    {/* Footer simple de la page */}
-      <footer className="page-footer small">
-        <span>© 2023 SecureScan Security. Tous droits réservés.</span>
-        <span>Politique de confidentialité</span>
-        <span>Conditions d'utilisation</span>
-        <span>Support</span>
-      </footer>
     </div>
   );
 };
