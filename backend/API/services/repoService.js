@@ -65,11 +65,9 @@ async function prepareRepo(githubUrl) {
   await simpleGit().clone(githubUrl, repoPath);
 
   const packageJsonPath = path.join(repoPath, "package.json");
-  if (!fs.existsSync(packageJsonPath)) {
-    throw new Error("No package.json found at repository root");
+  if (fs.existsSync(packageJsonPath)) {
+    await npmInstall(repoPath);
   }
-
-  await npmInstall(repoPath);
 
   return {
     scanId,
@@ -101,12 +99,11 @@ async function prepareZipFromBuffer(zipBuffer, originalName = "upload.zip") {
     .promise();
 
   // Find package.json (support github zip: repo/<name>-main/package.json)
-  const projectPath = findProjectRootWithPackageJson(repoPath);
-  if (!projectPath) {
-    throw new Error("No package.json found inside zip (expected a Node project)");
-  }
+  const projectPath = findProjectRootWithPackageJson(repoPath) || repoPath;
 
-  await npmInstall(projectPath);
+  if (fs.existsSync(path.join(projectPath, "package.json"))) {
+    await npmInstall(projectPath);
+  }
 
   return {
     scanId,

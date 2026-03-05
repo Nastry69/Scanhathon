@@ -16,7 +16,6 @@ const ScanInProgress = () => {
   const [analysisId, setAnalysisId] = useState(location.state?.analysisId ?? null);
   const githubUrl = location.state?.githubUrl;
   const userId = location.state?.userId ?? null;
-
   const stageRank = {
     starting: 0,
     preparing_repo: 1,

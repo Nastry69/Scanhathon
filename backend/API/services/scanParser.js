@@ -25,9 +25,9 @@ function mapOwaspFromSemgrepTags(tags = []) {
 
 function mapOwaspFromEslint(ruleId = "", message = "") {
   const s = `${ruleId} ${message}`.toLowerCase();
-  if (/(sql|xss|inject|command|child-process)/.test(s)) return OWASP_A0.A05;
-  if (/(md5|sha1|hash|crypto|password)/.test(s)) return OWASP_A0.A04;
-  if (/(postinstall|dependency|package|supply.chain|supply-chain|npm|yarn|pnpm)/.test(s)) return OWASP_A0.A03;
+  if (/(sql|xss|inject|command|child-process|nosql)/.test(s)) return OWASP_A0.A05;
+  if (/(md5|sha1|hash|crypto|password|cipher|cleartext)/.test(s)) return OWASP_A0.A04;
+  if (/(postinstall|dependency|supply-chain|supply chain|npm|yarn|pnpm)/.test(s)) return OWASP_A0.A03;
   return null;
 }
 

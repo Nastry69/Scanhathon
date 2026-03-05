@@ -73,15 +73,6 @@ const NewScan = () => {
         });
 
       } else {
-        response = await fetch(`${API_BASE}/scan`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ githubUrl, userId: user?.id ?? null }),
-        });
-
-        data = await response.json();
-        if (!response.ok) throw new Error(data?.error || data?.message || "Erreur API GitHub");
-
         const repoName = githubUrl
           .replace(/\/+$/, "")
           .split("/")
@@ -89,7 +80,7 @@ const NewScan = () => {
           .replace(".git", "");
 
         navigate("/analyses/en-cours", {
-          state: { scanId: data.scanId, analysisId: data.analysisId ?? null, repoName, githubUrl, source: "github" },
+          state: { githubUrl, userId: user?.id ?? null, repoName, source: "github" },
         });
       }
     } catch (err) {

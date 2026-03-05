@@ -41,9 +41,9 @@ function truncateText(text = "", maxChars = 220) {
 
 function mapA0FromText(input = "") {
   const s = String(input).toLowerCase();
-  if (/(sql|xss|inject|command injection|os command|child_process|child-process|nosql)/.test(s)) return OWASP_A0.A05;
-  if (/(crypto|cryptographic|cipher|hash|md5|sha1|weak key|tls|certificate|cleartext|sensitive data)/.test(s)) return OWASP_A0.A04;
-  if (/(dependency|supply chain|supply-chain|package|npm|yarn|pnpm|lockfile|postinstall|pipeline|ci\/cd)/.test(s)) return OWASP_A0.A03;
+  if (/(sql|xss|inject|command|child-process|child_process|nosql|os command)/.test(s)) return OWASP_A0.A05;
+  if (/(crypto|cryptographic|cipher|hash|md5|sha1|weak key|tls|certificate|cleartext|sensitive data|password)/.test(s)) return OWASP_A0.A04;
+  if (/(dependency|supply chain|supply-chain|npm|yarn|pnpm|lockfile|postinstall|pipeline|ci\/cd)/.test(s)) return OWASP_A0.A03;
   return null;
 }
 
