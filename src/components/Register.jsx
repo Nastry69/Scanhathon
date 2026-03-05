@@ -15,12 +15,23 @@ const Register = ({ onSuccess }) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
+  const passwordRules = [
+    { label: "8 caractères minimum", valid: form.password.length >= 8 },
+    { label: "1 majuscule", valid: /[A-Z]/.test(form.password) },
+    { label: "1 caractère spécial", valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password) },
+  ];
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     if (form.password !== form.confirmPassword) {
       setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    if (passwordRules.some((r) => !r.valid)) {
+      setError("Le mot de passe ne respecte pas les règles de sécurité.");
       return;
     }
 
@@ -85,6 +96,15 @@ const Register = ({ onSuccess }) => {
           onChange={onChangeField("password")}
           required
         />
+        {form.password.length > 0 && (
+          <ul className="password-rules">
+            {passwordRules.map((rule) => (
+              <li key={rule.label} className={rule.valid ? "rule-ok" : "rule-ko"}>
+                {rule.valid ? "✓" : "✗"} {rule.label}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="auth-field">

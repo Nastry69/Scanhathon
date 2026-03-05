@@ -79,12 +79,23 @@ const Profile = () => {
   const onChangePasswordField = (field) => (e) =>
     setPasswordForm((prev) => ({ ...prev, [field]: e.target.value }));
 
+  const passwordRules = [
+    { label: "8 caractères minimum", valid: passwordForm.newPassword.length >= 8 },
+    { label: "1 majuscule", valid: /[A-Z]/.test(passwordForm.newPassword) },
+    { label: "1 caractère spécial", valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordForm.newPassword) },
+  ];
+
   const onSubmitPassword = async (e) => {
     e.preventDefault();
     setPasswordMsg(null);
 
     if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
       setPasswordMsg({ type: "error", text: "Les mots de passe ne correspondent pas." });
+      return;
+    }
+
+    if (passwordRules.some((r) => !r.valid)) {
+      setPasswordMsg({ type: "error", text: "Le nouveau mot de passe ne respecte pas les règles de sécurité." });
       return;
     }
 
@@ -212,6 +223,15 @@ const Profile = () => {
                 onChange={onChangePasswordField("newPassword")}
                 required
               />
+              {passwordForm.newPassword.length > 0 && (
+                <ul className="password-rules">
+                  {passwordRules.map((rule) => (
+                    <li key={rule.label} className={rule.valid ? "rule-ok" : "rule-ko"}>
+                      {rule.valid ? "✓" : "✗"} {rule.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="auth-field">

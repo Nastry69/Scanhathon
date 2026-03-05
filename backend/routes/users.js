@@ -4,6 +4,16 @@ import { supabase, supabaseAdmin } from '../connexionDB.js'
 
 const router = express.Router()
 
+const validatePassword = (password) => {
+    if (password.length < 8)
+        return 'Le mot de passe doit contenir au moins 8 caractères'
+    if (!/[A-Z]/.test(password))
+        return 'Le mot de passe doit contenir au moins une majuscule'
+    if (!/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/.test(password))
+        return 'Le mot de passe doit contenir au moins un caractère spécial'
+    return null
+}
+
 // POST /api/users/register
 router.post('/register', async (req, res) => {
     try {
@@ -17,6 +27,9 @@ router.post('/register', async (req, res) => {
 
         if (username.trim().length > 30)
             return res.status(400).json({ error: 'Username must be at most 30 characters' })
+
+        const passwordError = validatePassword(password)
+        if (passwordError) return res.status(400).json({ error: passwordError })
 
         const { data: { user }, error: signUpError } = await supabase.auth.signUp({ email, password })
         if (signUpError) throw signUpError
@@ -103,8 +116,8 @@ router.put('/me/password', authMiddleware, async (req, res) => {
         if (!password || !newPassword)
             return res.status(400).json({ error: 'Current password and new password are required' })
 
-        if (newPassword.length < 6)
-            return res.status(400).json({ error: 'New password must be at least 6 characters' })
+        const passwordError = validatePassword(newPassword)
+        if (passwordError) return res.status(400).json({ error: passwordError })
 
         const { error: signInError } = await supabase.auth.signInWithPassword({
             email: req.user.email,
