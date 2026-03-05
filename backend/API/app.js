@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const { scanRepo } = require("./controllers/scanController");
+const { scanRepo, getScanStatus } = require("./controllers/scanController");
 
 const app = express();
 app.use(cors());
@@ -12,6 +12,7 @@ app.use("/scans", express.static(path.join(__dirname, "scans")));
 
 // Route principale
 app.post("/scan", scanRepo);
+app.get("/scan/status", getScanStatus);
 
 // Route test
 app.get("/", (req, res) => {

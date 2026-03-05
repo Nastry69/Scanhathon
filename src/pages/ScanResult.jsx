@@ -29,6 +29,12 @@ const OWASP_A0 = {
   A05: "A05:2025",
 };
 
+function truncateText(text = "", maxChars = 220) {
+  const value = String(text || "");
+  if (value.length <= maxChars) return value;
+  return `${value.slice(0, maxChars).trimEnd()}...`;
+}
+
 function mapA0FromText(input = "") {
   const s = String(input).toLowerCase();
   if (/(sql|xss|inject|command injection|os command|child_process|child-process|nosql)/.test(s)) return OWASP_A0.A05;
@@ -245,10 +251,6 @@ const ScanResult = () => {
           <section className="card vulns-card">
             <div className="card-header">
               <h2 className="section-title">Vulnérabilités détectées</h2>
-              <div className="card-header-actions">
-                <button className="btn-chip">Trier par : Sévérité</button>
-                <button className="btn-chip">Filtrer</button>
-              </div>
             </div>
             <div className="vuln-list">
               {vulns.length === 0 && (
@@ -258,39 +260,17 @@ const ScanResult = () => {
                 <article key={v.id} className="vuln-item">
                   <div className="vuln-header">
                     <Tag variant={v.severityVariant}>{v.severity}</Tag>
+                    {v.a0number && <span className="owasp-badge">OWASP {v.a0number}</span>}
                     <span className="vuln-id">{v.file ? `${v.file} ` : ""}{v.code}</span>
                   </div>
                   <h3 className="vuln-title">{v.title}</h3>
-                  <p className="vuln-desc">{v.description}</p>
-                  {v.a0number && <div className="vuln-meta">OWASP: {v.a0number}</div>}
+                  <p className="vuln-desc" title={v.description}>{truncateText(v.description, 220)}</p>
                   {v.line && <div className="vuln-meta">Ligne : {v.line}</div>}
                   {v.recommendation && <div className="vuln-meta">{v.recommendation}</div>}
                 </article>
               ))}
             </div>
           </section>
-          <aside className="card fixes-card">
-            <h2 className="section-title">Corrections suggérées</h2>
-            <p className="fixes-subtitle">Basé sur OWASP Top 10</p>
-            <ul className="fixes-list">
-              <li>
-                <strong>A03:2021-Injection</strong>
-                <p>Utiliser des requêtes paramétrées (Prepared Statements) pour toutes les interactions avec la base de données.</p>
-                <pre className="code-block">
-                  <code>{`$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");`}</code>
-                </pre>
-              </li>
-              <li>
-                <strong>A02:2021-Cryptographic Failures</strong>
-                <p>Mettre à jour les algorithmes de hachage vers Argon2id ou bcrypt avec un coût minimal de 12.</p>
-              </li>
-              <li>
-                <strong>A05:2021-Security Misconf.</strong>
-                <p>Ajouter l'en-tête <code>Strict-Transport-Security</code> avec <code>max-age=63072000; includeSubDomains</code>.</p>
-              </li>
-            </ul>
-            <button className="btn-secondary">Voir le guide complet de remédiation</button>
-          </aside>
         </div>
       </div>
     </div>

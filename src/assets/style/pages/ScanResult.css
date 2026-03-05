@@ -1,11 +1,10 @@
 .result-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
-  gap: 18px;
+  display: block;
 }
 
 .vulns-card {
   min-height: 260px;
+  width: 100%;
 }
 
 .card-header {
@@ -16,11 +15,6 @@
   margin-bottom: 10px;
 }
 
-.card-header-actions {
-  display: flex;
-  gap: 8px;
-}
-
 .vuln-list {
   display: flex;
   flex-direction: column;
@@ -28,7 +22,7 @@
 }
 
 .vuln-item {
-  padding: 12px 12px;
+  padding: 14px;
   border-radius: 12px;
   background: #0A0E17;
   border: 1px solid #151E2C;
@@ -44,6 +38,7 @@
 .vuln-id {
   font-size: 12px;
   color: var(--text-soft);
+  margin-left: auto;
 }
 
 .vuln-title {
@@ -55,46 +50,24 @@
   margin: 0;
   font-size: 13px;
   color: var(--text-muted);
+  line-height: 1.5;
 }
 
-.fixes-card {
-  align-self: flex-start;
+.owasp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(5, 229, 117, 0.18);
+  color: #89ffbf;
+  border: 1px solid rgba(5, 229, 117, 0.55);
 }
 
-.fixes-subtitle {
+.vuln-meta {
+  margin-top: 6px;
   font-size: 12px;
   color: var(--text-soft);
-  margin: 4px 0 10px;
-}
-
-.fixes-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.fixes-list p {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.code-block {
-  background: #0A0E17;
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin-top: 6px;
-  border: 1px solid #1B4D34;
-  font-size: 12px;
-  overflow-x: auto;
-}
-
-.code-block code {
-  display: block;
-  white-space: pre-wrap;   /* permet le retour à la ligne */
-  word-break: break-word;  /* casse les longues chaînes */
-  overflow-wrap: anywhere; /* sécurité supplémentaire */
 }

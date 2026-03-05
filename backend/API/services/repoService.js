@@ -15,30 +15,30 @@ async function prepareRepo(githubUrl) {
 
   // On suppose que package.json est à la racine
   const packageJsonPath = path.join(repoPath, "package.json");
+  const hasPackageJson = fs.existsSync(packageJsonPath);
 
-  if (!fs.existsSync(packageJsonPath)) {
-    throw new Error("No package.json found at repository root");
-  }
+  if (hasPackageJson) {
+    // Vérifie package-lock
+    const hasLock = fs.existsSync(
+      path.join(repoPath, "package-lock.json")
+    );
 
-  // Vérifie package-lock
-  const hasLock = fs.existsSync(
-    path.join(repoPath, "package-lock.json")
-  );
+    // Installer directement à la racine pour les projets Node
+    await new Promise((resolve, reject) => {
+      const command = hasLock ? "npm ci" : "npm install";
 
-  // Installer directement à la racine
-  await new Promise((resolve, reject) => {
-    const command = hasLock ? "npm ci" : "npm install";
-
-    exec(command, { cwd: repoPath }, (err) => {
-      if (err) reject(err);
-      else resolve();
+      exec(command, { cwd: repoPath }, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
     });
-  });
+  }
 
   return {
     scanId,
     repoPath,
-    projectPath: repoPath
+    projectPath: repoPath,
+    hasPackageJson,
   };
 }
 

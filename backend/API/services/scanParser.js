@@ -59,6 +59,39 @@ function relativePath(absPath = '') {
   return absPath.replace(/^.*\/[0-9a-f-]{36}\//, '');
 }
 
+function normalizeTextForKey(value = '') {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function vulnerabilityDedupKey(v) {
+  return [
+    normalizeTextForKey(v.tool),
+    normalizeTextForKey(v.severity),
+    normalizeTextForKey(v.A0number),
+    normalizeTextForKey(v.title),
+    normalizeTextForKey(v.file_path),
+    String(v.line_start ?? ''),
+    normalizeTextForKey(v.description).slice(0, 300),
+  ].join('|');
+}
+
+function dedupeVulnerabilities(rows = []) {
+  const seen = new Set();
+  const unique = [];
+
+  for (const row of rows) {
+    const key = vulnerabilityDedupKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(row);
+  }
+
+  return unique;
+}
+
 // ---------------------------------------------------------------------------
 // Snyk
 // ---------------------------------------------------------------------------
@@ -212,12 +245,14 @@ function parseSemgrep(json, analysisId) {
 // Orchestrateur
 // ---------------------------------------------------------------------------
 function parseAllScans({ snyk, npmAudit, eslint, semgrep }, analysisId) {
-  return [
+  const rows = [
     ...parseSnyk(snyk, analysisId),
     ...parseNpmAudit(npmAudit, analysisId),
     ...parseEslint(eslint, analysisId),
     ...parseSemgrep(semgrep, analysisId),
   ];
+
+  return dedupeVulnerabilities(rows);
 }
 
 module.exports = { parseAllScans, parseSnyk, parseNpmAudit, parseEslint, parseSemgrep };

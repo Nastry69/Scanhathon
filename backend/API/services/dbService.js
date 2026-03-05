@@ -27,6 +27,39 @@ function extractRepoName(repoUrl = '') {
   return parts[parts.length - 1] || clean;
 }
 
+function normalizeTextForKey(value = '') {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function vulnerabilityDedupKey(v) {
+  return [
+    normalizeTextForKey(v.tool),
+    normalizeTextForKey(v.severity),
+    normalizeTextForKey(v.A0number),
+    normalizeTextForKey(v.title),
+    normalizeTextForKey(v.file_path),
+    String(v.line_start ?? ''),
+    normalizeTextForKey(v.description).slice(0, 300),
+  ].join('|');
+}
+
+function dedupeVulnerabilities(rows = []) {
+  const seen = new Set();
+  const unique = [];
+
+  for (const row of rows) {
+    const key = vulnerabilityDedupKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(row);
+  }
+
+  return unique;
+}
+
 async function createAnalysis(userId, repoUrl, branch = 'main') {
   const payload = {
     user_id: userId,
@@ -100,20 +133,22 @@ async function saveVulnerabilities(analysisId, input) {
     return row;
   });
 
-  if (vulnerabilitiesForInsert.length === 0) {
+  const uniqueVulnerabilitiesForInsert = dedupeVulnerabilities(vulnerabilitiesForInsert);
+
+  if (uniqueVulnerabilitiesForInsert.length === 0) {
     await updateAnalysisScore(analysisId, []);
     return { inserted: 0 };
   }
 
   const { data, error } = await supabaseAdmin
     .from('vulnerabilities')
-    .insert(vulnerabilitiesForInsert)
+    .insert(uniqueVulnerabilitiesForInsert)
     .select('id');
 
   if (error) throw error;
 
-  await updateAnalysisScore(analysisId, vulnerabilitiesForInsert);
-  return { inserted: data?.length ?? vulnerabilitiesForInsert.length };
+  await updateAnalysisScore(analysisId, uniqueVulnerabilitiesForInsert);
+  return { inserted: data?.length ?? uniqueVulnerabilitiesForInsert.length };
 }
 
 async function getVulnerabilities(analysisId) {

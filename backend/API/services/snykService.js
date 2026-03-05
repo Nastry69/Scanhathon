@@ -9,6 +9,24 @@ function runSnyk(projectPath, scanId) {
     const scanFolder = path.join(__dirname, '../scans', scanId);
     fs.mkdirSync(scanFolder, { recursive: true });
 
+    const packageJsonPath = path.join(projectPath, 'package.json');
+    if (!fs.existsSync(packageJsonPath)) {
+      const result = {
+        skipped: true,
+        reason: 'no_package_json',
+        ok: true,
+        vulnerabilities: [],
+        summary: 'Skipped: no package.json found',
+      };
+
+      fs.writeFileSync(
+        path.join(scanFolder, 'snyk.json'),
+        JSON.stringify(result, null, 2)
+      );
+
+      return resolve(result);
+    }
+
     const snykOutputPath = path.join(scanFolder, 'snyk.raw.json');
 
     const cmd = `snyk test --json --json-file-output="${snykOutputPath}"`;
