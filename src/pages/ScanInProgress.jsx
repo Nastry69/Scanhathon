@@ -8,6 +8,8 @@ const ScanInProgress = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scanId = location.state?.scanId;
+  const repoName = location.state?.repoName;
+  const githubUrl = location.state?.githubUrl;
 
   useEffect(() => {
     // Fausse progression
@@ -40,9 +42,9 @@ const ScanInProgress = () => {
 
   useEffect(() => {
     if (scanReady && scanId) {
-      navigate("/analyses/resultat", { state: { scanId } });
+      navigate("/analyses/resultat", { state: { scanId, repoName, githubUrl } });
     }
-  }, [scanReady, scanId, navigate]);
+  }, [scanReady, scanId, repoName, githubUrl, navigate]);
 
   // Calcul de l'angle du cercle en fonction du pourcentage
   const progressAngle = progress * 3.6;

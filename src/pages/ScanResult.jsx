@@ -4,6 +4,10 @@ import StatCard from "../components/StatCard";
 import Tag from "../components/Tag";
 import { getVulnerabilities } from "../utils/api";
 
+import { pdf } from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
+import ScanReportPdf from "../PDF/scanReportPdf";
+
 // ─── Mapping sévérité — miroir exact de normalizeSeverity() du backend ────────
 
 // Utilisé pour les deux modes (fichiers et DB) pour garantir la cohérence
@@ -33,6 +37,7 @@ const ScanResult = () => {
   const scanId     = location.state?.scanId;      // mode fichiers (nouveau scan)
   const analysisId = location.state?.analysisId;  // mode DB (historique)
   const dbScore    = location.state?.dbScore;     // score déjà calculé en DB
+  const repoName   = location.state?.repoName || "Repo inconnu";
 
   // --- Mode fichiers ---
   const [eslintResult,   setEslintResult]   = useState(null);
@@ -172,7 +177,30 @@ const ScanResult = () => {
     return { crit, elev, moy, total: vulns.length, score };
   }, [vulns, dbScore]);
 
-  const handleDownloadPdf = () => {};
+
+  // ── Téléchargement du rapport PDF ──────────────────────────────────────────
+  const handleDownloadPdf = async () => {
+    try {
+    const analyzedAt = new Date();
+
+    const doc = (
+      <ScanReportPdf
+        repoName={repoName}
+        analyzedAt={analyzedAt}
+        score={stats.score}
+        stats={stats}
+        vulns={vulns}
+      />
+    );
+
+    const blob = await pdf(doc).toBlob();
+    saveAs(blob, `rapport-${repoName}.pdf`);
+
+  } catch (e) {
+    console.error(e);
+    alert("Impossible de générer le PDF.");
+  }
+};
 
   return (
     <div className="page-wrapper">
