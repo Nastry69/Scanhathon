@@ -141,7 +141,11 @@ function parseSemgrep(json, analysisId) {
 
   return (json.results ?? []).map(finding => {
     const meta  = finding.extra?.metadata ?? {};
-    const owasp = meta.owasp ?? [];
+    const owasp = Array.isArray(meta.owasp)
+      ? meta.owasp
+      : meta.owasp
+        ? [meta.owasp]
+        : [];
     const cwe   = Array.isArray(meta.cwe) ? meta.cwe : meta.cwe ? [meta.cwe] : [];
 
     const description = [

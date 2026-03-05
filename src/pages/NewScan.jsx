@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+/**import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../utils/AuthContext";
 import { getGithubRepos } from "../utils/api";
@@ -29,16 +29,7 @@ const NewScan = () => {
       });
       if (!response.ok) throw new Error("Erreur API");
       const { scanId } = await response.json();
-
-      const repoName = githubUrl
-        .replace(/\/+$/, "")
-        .split("/")
-        .pop()
-        .replace(".git", "");
-
-      navigate("/analyses/en-cours", {
-        state: { scanId, repoName, githubUrl }
-      });
+      navigate("/analyses/en-cours", { state: { scanId } });
     } catch (err) {
       alert("Erreur lors de l’analyse !");
     }
@@ -47,6 +38,111 @@ const NewScan = () => {
   const onFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) setZipName(file.name);
+  };*/
+
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../utils/AuthContext";
+import { getGithubRepos } from "../utils/api";
+
+const API_BASE = "http://localhost:3001"; // IMPORTANT: serveur server.js
+
+const NewScan = () => {
+  const [githubUrl, setGithubUrl] = useState("");
+  const [repos, setRepos] = useState([]);
+  const [selectedRepo, setSelectedRepo] = useState("");
+
+  const [zipFile, setZipFile] = useState(null);
+  const [zipName, setZipName] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const navigate = useNavigate();
+  const { loggedIn, user } = useAuth();
+
+  useEffect(() => {
+    if (loggedIn && user?.github_username) {
+      getGithubRepos().then(setRepos).catch(() => setRepos([]));
+    }
+  }, [loggedIn, user?.github_username]);
+
+  const onFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setZipFile(file);
+    setZipName(file.name);
+    console.log("ZIP selected:", file.name, file.size);
+
+    // Option UX: si user choisit un zip, on vide githubUrl pour éviter ambiguity
+    setGithubUrl("");
+    setSelectedRepo("");
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    // Cas ZIP prioritaire si présent
+    const isZip = !!zipFile;
+    const isGithub = !!githubUrl;
+    console.log("Submit:", { isZip, isGithub, zipName, githubUrl });
+
+    if (!isZip && !isGithub) {
+      setError("Ajoute un lien GitHub OU un fichier ZIP.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let response;
+      let data;
+
+      if (isZip) {
+        const fd = new FormData();
+        fd.append("zip", zipFile);
+        if (user?.id) fd.append("userId", user.id);
+
+        response = await fetch(`${API_BASE}/scan/zip`, {
+          method: "POST",
+          body: fd,
+        });
+
+        data = await response.json();
+        if (!response.ok) throw new Error(data?.error || data?.message || "Erreur upload ZIP");
+
+        const repoName = zipName?.replace(/\.zip$/i, "") || "zip-upload";
+
+        navigate("/analyses/en-cours", {
+          state: { scanId: data.scanId, repoName, githubUrl: null, source: "zip" },
+        });
+
+      } else {
+        response = await fetch(`${API_BASE}/scan`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ githubUrl, userId: user?.id ?? null }),
+        });
+
+        data = await response.json();
+        if (!response.ok) throw new Error(data?.error || data?.message || "Erreur API GitHub");
+
+        const repoName = githubUrl
+          .replace(/\/+$/, "")
+          .split("/")
+          .pop()
+          .replace(".git", "");
+
+        navigate("/analyses/en-cours", {
+          state: { scanId: data.scanId, repoName, githubUrl, source: "github" },
+        });
+      }
+    } catch (err) {
+      setError(err.message || "Erreur lors de l’analyse !");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -128,9 +224,11 @@ const NewScan = () => {
           </label>
         </section>
 
-        <button type="submit" className="btn-primary">
+        {error && <p style={{ color: "red", marginTop: 8 }}>{error}</p>}
+
+        <button type="submit" className="btn-primary" disabled={loading}>
           <span>📊</span>
-          Analyser le code source
+          {loading ? "Analyse en cours..." : "Analyser le code source"}
         </button>
 
         <div className="newscan-footer">

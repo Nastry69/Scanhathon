@@ -35,9 +35,8 @@
 // }
 
 // module.exports = { scanRepo };
-// backend/API/controllers/scan.js
 
-const { prepareRepo } = require('../services/repoService');
+const { prepareRepo, prepareZipFromBuffer } = require('../services/repoService');
 const { runNpmAudit } = require('../services/npmAuditService');
 const { runSemgrep } = require('../services/semgrepService');
 const { runSnyk } = require('../services/snykService');
@@ -151,3 +150,79 @@ exports.scanRepo = async (req, res) => {
     });
   }
 };
+
+exports.scanZip = async (req, res) => {
+  let analysisId = null;
+
+  try {
+    const { userId } = req.body;
+
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ error: "zip file required (field name: zip)" });
+    }
+
+    // DB: on peut stocker un pseudo repo_url
+    if (userId) {
+      try {
+        analysisId = await createAnalysis(userId, "zip_upload");
+      } catch (e) {
+        console.error("[SCAN ZIP] DB createAnalysis failed:", e);
+      }
+    }
+
+    const { projectPath, repoPath, scanId } = await prepareZipFromBuffer(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    const result = await runAllTools({ projectPath, scanId });
+
+    if (analysisId) {
+      try {
+        await saveVulnerabilities(analysisId, result);
+      } catch (e) {
+        console.error("[SCAN ZIP] DB saveVulnerabilities failed:", e);
+        await failAnalysis(analysisId).catch(() => {});
+      }
+    }
+
+    return res.json({ scanId, analysisId, projectPath, repoPath, ...result });
+  } catch (err) {
+    console.error("[SCAN ZIP] Error:", err);
+    if (analysisId) await failAnalysis(analysisId).catch(() => {});
+    return res.status(500).json({ error: "Scan failed", message: err.message });
+  }
+};
+
+async function runAllTools({ projectPath, scanId }) {
+  let npmAudit = null;
+  let semgrep = null;
+  let snyk = null;
+  let eslint = null;
+
+  try {
+    npmAudit = await runNpmAudit(projectPath, scanId);
+  } catch (e) {
+    npmAudit = { error: "npm_audit_failed", message: e.message };
+  }
+
+  try {
+    eslint = await runEslint(projectPath, scanId);
+  } catch (e) {
+    eslint = { error: "eslint_failed", message: e.message };
+  }
+
+  try {
+    semgrep = await runSemgrep(projectPath, scanId);
+  } catch (e) {
+    semgrep = { error: "semgrep_failed", message: e.message };
+  }
+
+  try {
+    snyk = await runSnyk(projectPath, scanId);
+  } catch (e) {
+    snyk = { error: "snyk_failed", message: e.message };
+  }
+
+  return { snyk, npmAudit, eslint, semgrep };
+}
