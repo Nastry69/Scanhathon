@@ -5,7 +5,7 @@ const path = require("path");
 function runNpmAudit(projectPath, scanId) {
   return new Promise((resolve, reject) => {
 
-    exec("npm audit --json", { cwd: projectPath }, (err, stdout, stderr) => {
+    exec("npm audit --json", { cwd: projectPath }, (err, stdout) => {
 
       if (err && !stdout) {
         return reject(err);

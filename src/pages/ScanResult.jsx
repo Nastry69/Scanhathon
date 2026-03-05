@@ -197,7 +197,6 @@ const ScanResult = () => {
       saveAs(blob, `rapport-securescan.pdf`);
 
     } catch (e) {
-      console.error(e);
       alert("Impossible de générer le PDF.");
     }
   };

@@ -1,45 +1,3 @@
-/**import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../utils/AuthContext";
-import { getGithubRepos } from "../utils/api";
-
-const NewScan = () => {
-  const [githubUrl, setGithubUrl] = useState("");
-  const [zipName, setZipName] = useState(null);
-  const [repos, setRepos] = useState([]);
-  const [selectedRepo, setSelectedRepo] = useState("");
-  const navigate = useNavigate();
-  const { loggedIn, user } = useAuth();
-
-  useEffect(() => {
-    if (loggedIn && user?.github_username) {
-      getGithubRepos().then(setRepos).catch(() => setRepos([]));
-    }
-  }, [loggedIn, user?.github_username]);
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    if (!githubUrl) return;
-
-    try {
-      const response = await fetch("http://localhost:3001/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ githubUrl, userId: user?.id ?? null })
-      });
-      if (!response.ok) throw new Error("Erreur API");
-      const { scanId } = await response.json();
-      navigate("/analyses/en-cours", { state: { scanId } });
-    } catch (err) {
-      alert("Erreur lors de l’analyse !");
-    }
-  };
-
-  const onFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) setZipName(file.name);
-  };*/
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../utils/AuthContext";
@@ -72,9 +30,7 @@ const NewScan = () => {
     if (!file) return;
     setZipFile(file);
     setZipName(file.name);
-    console.log("ZIP selected:", file.name, file.size);
-
-    // Option UX: si user choisit un zip, on vide githubUrl pour éviter ambiguity
+    // si user choisit un zip, on vide githubUrl pour éviter ambiguity
     setGithubUrl("");
     setSelectedRepo("");
   };
@@ -83,10 +39,8 @@ const NewScan = () => {
     e.preventDefault();
     setError("");
 
-    // Cas ZIP prioritaire si présent
     const isZip = !!zipFile;
     const isGithub = !!githubUrl;
-    console.log("Submit:", { isZip, isGithub, zipName, githubUrl });
 
     if (!isZip && !isGithub) {
       setError("Ajoute un lien GitHub OU un fichier ZIP.");

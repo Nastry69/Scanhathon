@@ -13,7 +13,7 @@ function runSnyk(projectPath, scanId) {
         PATH: process.env.PATH + ':/usr/local/bin',
       },
       maxBuffer: 10 * 1024 * 1024,
-    }, (err, stdout, stderr) => {
+    }, (err, stdout) => {
       if (err && !stdout) {
         return reject(err);
       }

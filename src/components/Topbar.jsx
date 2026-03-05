@@ -2,21 +2,11 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../utils/AuthContext";
 
-/** Topbar */
 const Topbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { loggedIn, logout } = useAuth();
   const isAuthPage = location.pathname === "/authpage";
-
-  const handleLogout = () => {
-    logout();
-    navigate("/authpage");
-  };
-
-  const handleLoginClick = () => {
-    navigate("/authpage");
-  };
 
   return (
     <header className="topbar">
@@ -30,7 +20,7 @@ const Topbar = () => {
       <div className="topbar-right">
         {loggedIn ? (
           <div>
-            <button className="topbar-btn" onClick={() => { handleLogout(); navigate("/"); }} >
+            <button className="topbar-btn" onClick={() => { logout(); navigate("/"); }}>
               Se déconnecter
             </button>
             <button className="topbar-icon-btn topbar-icon-btn--active" onClick={() => navigate("/profile")}>
@@ -39,7 +29,7 @@ const Topbar = () => {
           </div>
         ) : (
           <div className="topbar-right">
-            <button className="topbar-btn" onClick={() => isAuthPage ? navigate("/") : handleLoginClick()}>
+            <button className="topbar-btn" onClick={() => navigate(isAuthPage ? "/" : "/authpage")}>
               {isAuthPage ? "Retour à l'accueil" : "Login"}
             </button>
           </div>
