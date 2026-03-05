@@ -1,5 +1,5 @@
 export async function scanRepo(githubUrl) {
-  const response = await fetch('http://localhost:3000/scan', {
+  const response = await fetch('http://localhost:3001/scan', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

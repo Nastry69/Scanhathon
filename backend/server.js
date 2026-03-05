@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
 
+import scanRouter from './routes/scan.js'
 import usersRouter from './routes/users.js'
 import analysesRouter from './routes/analyses.js'
 import vulnerabilitiesRouter from './routes/vulnerabilities.js'
@@ -20,6 +21,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec))
 
 // Routes
+app.use("/", scanRouter);
 app.use('/api/users', usersRouter)
 app.use('/api/analyses', analysesRouter)
 app.use('/api/vulnerabilities', vulnerabilitiesRouter)

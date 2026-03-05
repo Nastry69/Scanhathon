@@ -29,7 +29,16 @@ const NewScan = () => {
       });
       if (!response.ok) throw new Error("Erreur API");
       const { scanId } = await response.json();
-      navigate("/analyses/en-cours", { state: { scanId } });
+
+      const repoName = githubUrl
+        .replace(/\/+$/, "")
+        .split("/")
+        .pop()
+        .replace(".git", "");
+
+      navigate("/analyses/en-cours", {
+        state: { scanId, repoName, githubUrl }
+      });
     } catch (err) {
       alert("Erreur lors de l’analyse !");
     }
