@@ -93,3 +93,21 @@ export const disconnectGithub = async () => {
   if (!res.ok) throw new Error(data.error ?? "Erreur serveur");
   return data;
 };
+
+export const getAnalyses = async () => {
+  const res = await fetch(`${API_BASE}/analyses`, {
+    headers: authHeaders(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error ?? "Erreur serveur");
+  return data;
+};
+
+export const getVulnerabilities = async (analysisId) => {
+  const res = await fetch(`${API_BASE}/vulnerabilities/${analysisId}`, {
+    headers: authHeaders(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error ?? "Erreur serveur");
+  return data;
+};

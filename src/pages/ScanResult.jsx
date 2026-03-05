@@ -2,127 +2,184 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import StatCard from "../components/StatCard";
 import Tag from "../components/Tag";
-import { jsPDF } from "jspdf";
+import { getVulnerabilities } from "../utils/api";
 
-const SEVERITY_MAP = {
-  2: { label: "Critique", variant: "critical" },
-  1: { label: "Élevée", variant: "high" },
-  0: { label: "Moyenne", variant: "medium" },
-};
+// ─── Mapping sévérité — miroir exact de normalizeSeverity() du backend ────────
+
+// Utilisé pour les deux modes (fichiers et DB) pour garantir la cohérence
+function normalizeSev(raw = '') {
+  const s = String(raw).toLowerCase();
+  if (s === 'critical')                                       return { label: "Critique", variant: "critical" };
+  if (['high', 'error'].includes(s))                         return { label: "Élevée",   variant: "high" };
+  if (['moderate', 'medium', 'warning'].includes(s))         return { label: "Moyenne",  variant: "medium" };
+  if (s === 'low')                                           return { label: "Faible",   variant: "medium" };
+  return { label: "Info", variant: "medium" };
+}
+
+// ESLint utilise 0/1/2 — aligné sur parseEslint() du backend
+function normalizeSevEslint(severity) {
+  if (severity === 2) return { label: "Élevée",  variant: "high" };
+  if (severity === 1) return { label: "Moyenne", variant: "medium" };
+  return { label: "Info", variant: "medium" };
+}
+
+// ─── Composant ────────────────────────────────────────────────────────────────
+
+// Poids identiques au backend (dbService.js)
+const SEVERITY_SCORE_WEIGHTS = { Critique: 25, Élevée: 15, Moyenne: 7, Faible: 3, Info: 0 };
 
 const ScanResult = () => {
   const location = useLocation();
-  const scanId = location.state?.scanId;
-  const [eslintResult, setEslintResult] = useState(null);
+  const scanId     = location.state?.scanId;      // mode fichiers (nouveau scan)
+  const analysisId = location.state?.analysisId;  // mode DB (historique)
+  const dbScore    = location.state?.dbScore;     // score déjà calculé en DB
+
+  // --- Mode fichiers ---
+  const [eslintResult,   setEslintResult]   = useState(null);
   const [npmAuditResult, setNpmAuditResult] = useState(null);
-  const [semgrepResult, setSemgrepResult] = useState(null);
-  const [snykResult, setSnykResult] = useState(null);
+  const [semgrepResult,  setSemgrepResult]  = useState(null);
+  const [snykResult,     setSnykResult]     = useState(null);
+
+  // --- Mode DB ---
+  const [dbVulns, setDbVulns] = useState(null);
 
   useEffect(() => {
-    if (!scanId) return;
-    fetch(`http://localhost:3001/scans/${scanId}/eslint.json`)
-      .then(res => res.json())
-      .then(setEslintResult);
-    fetch(`http://localhost:3001/scans/${scanId}/npm-audit.json`)
-      .then(res => res.json())
-      .then(setNpmAuditResult);
-    fetch(`http://localhost:3001/scans/${scanId}/semgrep.json`)
-      .then(res => res.json())
-      .then(setSemgrepResult)
-      .catch(() => setSemgrepResult(null));
-    fetch(`http://localhost:3001/scans/${scanId}/snyk.json`)
-      .then(res => res.json())
-      .then(setSnykResult)
-      .catch(() => setSnykResult(null));
-  }, [scanId]);
+    if (analysisId) {
+      // Vient de l'historique → on charge depuis la DB
+      getVulnerabilities(analysisId)
+        .then(setDbVulns)
+        .catch(() => setDbVulns([]));
+      return;
+    }
 
-  // Mapping ESLint JSON → vulnérabilités
+    if (!scanId) return;
+    // Vient d'un nouveau scan → on charge les fichiers JSON
+    fetch(`http://localhost:3001/scans/${scanId}/eslint.json`)
+      .then(res => res.json()).then(setEslintResult).catch(() => {});
+    fetch(`http://localhost:3001/scans/${scanId}/npm-audit.json`)
+      .then(res => res.json()).then(setNpmAuditResult).catch(() => {});
+    fetch(`http://localhost:3001/scans/${scanId}/semgrep.json`)
+      .then(res => res.json()).then(setSemgrepResult).catch(() => setSemgrepResult(null));
+    fetch(`http://localhost:3001/scans/${scanId}/snyk.json`)
+      .then(res => res.json()).then(setSnykResult).catch(() => setSnykResult(null));
+  }, [scanId, analysisId]);
+
+  // ── Mapping fichiers → vulns ────────────────────────────────────────────────
+
   const eslintVulns = useMemo(() => {
     if (!eslintResult) return [];
-    return eslintResult
-      .flatMap(file =>
-        (file.messages || []).map(msg => ({
-          id: `${file.filePath}:${msg.line}:${msg.column}`,
-          severity: SEVERITY_MAP[msg.severity]?.label || "Info",
-          severityVariant: SEVERITY_MAP[msg.severity]?.variant || "medium",
-          title: msg.ruleId ? `Règle : ${msg.ruleId}` : "Alerte ESLint",
-          code: msg.ruleId || "ESLINT",
-          description: msg.message,
-          file: file.filePath,
-          line: msg.line,
-        }))
-      );
+    return eslintResult.flatMap(file =>
+      (file.messages || []).map(msg => ({
+        id: `${file.filePath}:${msg.line}:${msg.column}`,
+        severity:        normalizeSevEslint(msg.severity).label,
+        severityVariant: normalizeSevEslint(msg.severity).variant,
+        title:       msg.ruleId ? `Règle : ${msg.ruleId}` : "Alerte ESLint",
+        code:        msg.ruleId || "ESLINT",
+        description: msg.message,
+        file:        file.filePath,
+        line:        msg.line,
+      }))
+    );
   }, [eslintResult]);
 
-  // Mapping NPM Audit (exemple simplifié, à adapter selon ton format réel)
   const npmVulns = useMemo(() => {
-    if (!npmAuditResult || !npmAuditResult.vulnerabilities) return [];
-    return Object.values(npmAuditResult.vulnerabilities).map((v, idx) => ({
-      id: v.name + idx,
-      severity: v.severity === "critical" ? "Critique" : v.severity === "high" ? "Élevée" : "Moyenne",
-      severityVariant: v.severity === "critical" ? "critical" : v.severity === "high" ? "high" : "medium",
-      title: v.title || v.name,
-      code: v.name,
-      description: v.overview || v.via?.[0]?.title || v.severity,
-    }));
+    if (!npmAuditResult?.vulnerabilities) return [];
+    // Miroir de parseNpmAudit() : on itère par advisory (via), pas par package
+    return Object.values(npmAuditResult.vulnerabilities).flatMap((entry, pkgIdx) => {
+      const advisories = (entry.via ?? []).filter(v => typeof v === 'object');
+      if (!advisories.length) return [];
+      return advisories.map((advisory, advIdx) => {
+        const sev = normalizeSev(advisory.severity);
+        return {
+          id:              entry.name + pkgIdx + advIdx,
+          severity:        sev.label,
+          severityVariant: sev.variant,
+          title:       advisory.title ?? `Vulnerability in ${entry.name}`,
+          code:        entry.name,
+          description: advisory.url ? `Advisory: ${advisory.url}` : advisory.severity,
+        };
+      });
+    });
   }, [npmAuditResult]);
 
-
-  // Mapping Semgrep
   const semgrepVulns = useMemo(() => {
     if (!semgrepResult || !Array.isArray(semgrepResult.results)) return [];
-    return semgrepResult.results.map((r, idx) => ({
-      id: r.check_id + idx,
-      severity: r.extra?.severity === "ERROR" ? "Critique" : r.extra?.severity === "WARNING" ? "Élevée" : "Moyenne",
-      severityVariant: r.extra?.severity === "ERROR" ? "critical" : r.extra?.severity === "WARNING" ? "high" : "medium",
-      title: r.check_id,
-      code: r.check_id,
-      description: r.extra?.message || r.path,
-      file: r.path,
-      line: r.start?.line,
-    }));
+    return semgrepResult.results.map((r, idx) => {
+      const sev = normalizeSev(r.extra?.severity ?? r.extra?.metadata?.confidence);
+      return {
+        id:              r.check_id + idx,
+        severity:        sev.label,
+        severityVariant: sev.variant,
+        title:       r.check_id,
+        code:        r.check_id,
+        description: r.extra?.message || r.path,
+        file:        r.path,
+        line:        r.start?.line,
+      };
+    });
   }, [semgrepResult]);
 
-  // Mapping Snyk
   const snykVulns = useMemo(() => {
     if (!snykResult || !Array.isArray(snykResult.vulnerabilities)) return [];
-    return snykResult.vulnerabilities.map((v, idx) => ({
-      id: v.id + idx,
-      severity: v.severity === "critical" ? "Critique" : v.severity === "high" ? "Élevée" : "Moyenne",
-      severityVariant: v.severity === "critical" ? "critical" : v.severity === "high" ? "high" : "medium",
-      title: v.title || v.name,
-      code: v.id,
-      description: v.description || v.overview || v.severity,
-      file: v.moduleName,
-      line: undefined,
-    }));
+    return snykResult.vulnerabilities.map((v, idx) => {
+      const sev = normalizeSev(v.severity);
+      return {
+        id:              v.id + idx,
+        severity:        sev.label,
+        severityVariant: sev.variant,
+        title:       v.title || v.name,
+        code:        v.id,
+        description: v.description || v.overview || v.severity,
+        file:        v.moduleName,
+      };
+    });
   }, [snykResult]);
 
-  // Fusionne toutes les vulnérabilités pour affichage
-  const vulns = [
-    ...eslintVulns,
-    ...npmVulns,
-    ...semgrepVulns,
-    ...snykVulns,
-  ];
+  // ── Mapping DB → vulns ──────────────────────────────────────────────────────
 
-  // Statistiques simples
+  const dbMappedVulns = useMemo(() => {
+    if (!dbVulns) return [];
+    return dbVulns.map((v) => ({
+      id:              v.id,
+      severity:        normalizeSev(v.severity).label,
+      severityVariant: normalizeSev(v.severity).variant,
+      title:       v.title,
+      code:        v.tool,
+      description: v.description,
+      file:        v.file_path,
+      line:        v.line_start,
+      recommendation: v.recommendation,
+    }));
+  }, [dbVulns]);
+
+  // ── Fusion finale ───────────────────────────────────────────────────────────
+
+  const vulns = analysisId
+    ? dbMappedVulns
+    : [...eslintVulns, ...npmVulns, ...semgrepVulns, ...snykVulns];
+
   const stats = useMemo(() => {
     const crit = vulns.filter(v => v.severity === "Critique").length;
     const elev = vulns.filter(v => v.severity === "Élevée").length;
-    const moy = vulns.filter(v => v.severity === "Moyenne").length;
-    return { crit, elev, moy, total: vulns.length };
-  }, [vulns]);
+    const moy  = vulns.filter(v => v.severity === "Moyenne").length;
+    // Score calculé comme le backend : déduction par vuln individuelle
+    const computedScore = Math.max(
+      0,
+      100 - vulns.reduce((sum, v) => sum + (SEVERITY_SCORE_WEIGHTS[v.severity] ?? 0), 0)
+    );
+    // En mode historique on utilise le score stocké en DB, sinon le score calculé
+    const score = dbScore ?? computedScore;
+    return { crit, elev, moy, total: vulns.length, score };
+  }, [vulns, dbScore]);
 
-  // PDF (inchangé)
-  const handleDownloadPdf = () => {/* ...conserve ton code PDF ici... */ };
+  const handleDownloadPdf = () => {};
 
   return (
     <div className="page-wrapper">
       <div id="rapport-pdf">
         <div className="page-header-row">
           <div>
-            <h1 className="page-title">Résultats de l’analyse</h1>
+            <h1 className="page-title">Résultats de l'analyse</h1>
             <p className="page-subtitle">
               Visualisez les vulnérabilités détectées sur ce dépôt.
             </p>
@@ -134,12 +191,12 @@ const ScanResult = () => {
         <div className="grid-3">
           <StatCard
             label="Score global"
-            value={vulns.length === 0 ? "100/100" : `${Math.max(0, 100 - stats.crit * 20 - stats.elev * 10 - stats.moy * 5)}/100`}
-            sub={vulns.length === 0 ? "Aucune vulnérabilité détectée" : `${stats.crit} Critique · ${stats.elev} Élevée · ${stats.moy} Moyenne`}
+            value={`${stats.score}/100`}
+            sub={stats.total === 0 ? "Aucune vulnérabilité détectée" : `${stats.crit} Critique · ${stats.elev} Élevée · ${stats.moy} Moyenne`}
           />
           <StatCard
             label="Vulnérabilités"
-            value={`${stats.crit.toString().padStart(2, "0")} Critique · ${stats.elev.toString().padStart(2, "0")} Élevée · ${stats.moy.toString().padStart(2, "0")} Moyenne`}
+            value={`${String(stats.crit).padStart(2, "0")} Critique · ${String(stats.elev).padStart(2, "0")} Élevée · ${String(stats.moy).padStart(2, "0")} Moyenne`}
             sub={`${stats.total} vulnérabilités au total détectées.`}
           />
           <div className="card compliance-card">
@@ -166,16 +223,19 @@ const ScanResult = () => {
               </div>
             </div>
             <div className="vuln-list">
-              {vulns.length === 0 && <p>Aucune vulnérabilité détectée !</p>}
+              {vulns.length === 0 && (
+                <p>{analysisId && !dbVulns ? "Chargement…" : "Aucune vulnérabilité détectée !"}</p>
+              )}
               {vulns.map((v) => (
                 <article key={v.id} className="vuln-item">
                   <div className="vuln-header">
                     <Tag variant={v.severityVariant}>{v.severity}</Tag>
-                    <span className="vuln-id">{v.file ? `${v.file}` : "ID : "}{v.code}</span>
+                    <span className="vuln-id">{v.file ? `${v.file} ` : ""}{v.code}</span>
                   </div>
                   <h3 className="vuln-title">{v.title}</h3>
                   <p className="vuln-desc">{v.description}</p>
                   {v.line && <div className="vuln-meta">Ligne : {v.line}</div>}
+                  {v.recommendation && <div className="vuln-meta">{v.recommendation}</div>}
                 </article>
               ))}
             </div>
@@ -197,7 +257,7 @@ const ScanResult = () => {
               </li>
               <li>
                 <strong>A05:2021-Security Misconf.</strong>
-                <p>Ajouter l’en-tête <code>Strict-Transport-Security</code> avec <code>max-age=63072000; includeSubDomains</code>.</p>
+                <p>Ajouter l'en-tête <code>Strict-Transport-Security</code> avec <code>max-age=63072000; includeSubDomains</code>.</p>
               </li>
             </ul>
             <button className="btn-secondary">Voir le guide complet de remédiation</button>
