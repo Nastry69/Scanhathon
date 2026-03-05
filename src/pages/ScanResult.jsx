@@ -6,23 +6,23 @@ import { getVulnerabilities } from "../utils/api";
 
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
-import ScanReportPdf from "../PDF/scanReportPdf";
+import ScanReportPdf from "../pages/scanReportPdf";
 
 // ─── Mapping sévérité — miroir exact de normalizeSeverity() du backend ────────
 
 // Utilisé pour les deux modes (fichiers et DB) pour garantir la cohérence
 function normalizeSev(raw = '') {
   const s = String(raw).toLowerCase();
-  if (s === 'critical')                                       return { label: "Critique", variant: "critical" };
-  if (['high', 'error'].includes(s))                         return { label: "Élevée",   variant: "high" };
-  if (['moderate', 'medium', 'warning'].includes(s))         return { label: "Moyenne",  variant: "medium" };
-  if (s === 'low')                                           return { label: "Faible",   variant: "medium" };
+  if (s === 'critical') return { label: "Critique", variant: "critical" };
+  if (['high', 'error'].includes(s)) return { label: "Élevée", variant: "high" };
+  if (['moderate', 'medium', 'warning'].includes(s)) return { label: "Moyenne", variant: "medium" };
+  if (s === 'low') return { label: "Faible", variant: "medium" };
   return { label: "Info", variant: "medium" };
 }
 
 // ESLint utilise 0/1/2 — aligné sur parseEslint() du backend
 function normalizeSevEslint(severity) {
-  if (severity === 2) return { label: "Élevée",  variant: "high" };
+  if (severity === 2) return { label: "Élevée", variant: "high" };
   if (severity === 1) return { label: "Moyenne", variant: "medium" };
   return { label: "Info", variant: "medium" };
 }
@@ -34,16 +34,16 @@ const SEVERITY_SCORE_WEIGHTS = { Critique: 25, Élevée: 15, Moyenne: 7, Faible:
 
 const ScanResult = () => {
   const location = useLocation();
-  const scanId     = location.state?.scanId;      // mode fichiers (nouveau scan)
+  const scanId = location.state?.scanId;      // mode fichiers (nouveau scan)
   const analysisId = location.state?.analysisId;  // mode DB (historique)
-  const dbScore    = location.state?.dbScore;     // score déjà calculé en DB
-  const repoName   = location.state?.repoName || "Repo inconnu";
+  const dbScore = location.state?.dbScore;     // score déjà calculé en DB
+  const repoName = location.state?.repoName || "Repo inconnu";
 
   // --- Mode fichiers ---
-  const [eslintResult,   setEslintResult]   = useState(null);
+  const [eslintResult, setEslintResult] = useState(null);
   const [npmAuditResult, setNpmAuditResult] = useState(null);
-  const [semgrepResult,  setSemgrepResult]  = useState(null);
-  const [snykResult,     setSnykResult]     = useState(null);
+  const [semgrepResult, setSemgrepResult] = useState(null);
+  const [snykResult, setSnykResult] = useState(null);
 
   // --- Mode DB ---
   const [dbVulns, setDbVulns] = useState(null);
@@ -60,9 +60,9 @@ const ScanResult = () => {
     if (!scanId) return;
     // Vient d'un nouveau scan → on charge les fichiers JSON
     fetch(`http://localhost:3001/scans/${scanId}/eslint.json`)
-      .then(res => res.json()).then(setEslintResult).catch(() => {});
+      .then(res => res.json()).then(setEslintResult).catch(() => { });
     fetch(`http://localhost:3001/scans/${scanId}/npm-audit.json`)
-      .then(res => res.json()).then(setNpmAuditResult).catch(() => {});
+      .then(res => res.json()).then(setNpmAuditResult).catch(() => { });
     fetch(`http://localhost:3001/scans/${scanId}/semgrep.json`)
       .then(res => res.json()).then(setSemgrepResult).catch(() => setSemgrepResult(null));
     fetch(`http://localhost:3001/scans/${scanId}/snyk.json`)
@@ -76,13 +76,13 @@ const ScanResult = () => {
     return eslintResult.flatMap(file =>
       (file.messages || []).map(msg => ({
         id: `${file.filePath}:${msg.line}:${msg.column}`,
-        severity:        normalizeSevEslint(msg.severity).label,
+        severity: normalizeSevEslint(msg.severity).label,
         severityVariant: normalizeSevEslint(msg.severity).variant,
-        title:       msg.ruleId ? `Règle : ${msg.ruleId}` : "Alerte ESLint",
-        code:        msg.ruleId || "ESLINT",
+        title: msg.ruleId ? `Règle : ${msg.ruleId}` : "Alerte ESLint",
+        code: msg.ruleId || "ESLINT",
         description: msg.message,
-        file:        file.filePath,
-        line:        msg.line,
+        file: file.filePath,
+        line: msg.line,
       }))
     );
   }, [eslintResult]);
@@ -96,11 +96,11 @@ const ScanResult = () => {
       return advisories.map((advisory, advIdx) => {
         const sev = normalizeSev(advisory.severity);
         return {
-          id:              entry.name + pkgIdx + advIdx,
-          severity:        sev.label,
+          id: entry.name + pkgIdx + advIdx,
+          severity: sev.label,
           severityVariant: sev.variant,
-          title:       advisory.title ?? `Vulnerability in ${entry.name}`,
-          code:        entry.name,
+          title: advisory.title ?? `Vulnerability in ${entry.name}`,
+          code: entry.name,
           description: advisory.url ? `Advisory: ${advisory.url}` : advisory.severity,
         };
       });
@@ -112,14 +112,14 @@ const ScanResult = () => {
     return semgrepResult.results.map((r, idx) => {
       const sev = normalizeSev(r.extra?.severity ?? r.extra?.metadata?.confidence);
       return {
-        id:              r.check_id + idx,
-        severity:        sev.label,
+        id: r.check_id + idx,
+        severity: sev.label,
         severityVariant: sev.variant,
-        title:       r.check_id,
-        code:        r.check_id,
+        title: r.check_id,
+        code: r.check_id,
         description: r.extra?.message || r.path,
-        file:        r.path,
-        line:        r.start?.line,
+        file: r.path,
+        line: r.start?.line,
       };
     });
   }, [semgrepResult]);
@@ -129,13 +129,13 @@ const ScanResult = () => {
     return snykResult.vulnerabilities.map((v, idx) => {
       const sev = normalizeSev(v.severity);
       return {
-        id:              v.id + idx,
-        severity:        sev.label,
+        id: v.id + idx,
+        severity: sev.label,
         severityVariant: sev.variant,
-        title:       v.title || v.name,
-        code:        v.id,
+        title: v.title || v.name,
+        code: v.id,
         description: v.description || v.overview || v.severity,
-        file:        v.moduleName,
+        file: v.moduleName,
       };
     });
   }, [snykResult]);
@@ -145,14 +145,14 @@ const ScanResult = () => {
   const dbMappedVulns = useMemo(() => {
     if (!dbVulns) return [];
     return dbVulns.map((v) => ({
-      id:              v.id,
-      severity:        normalizeSev(v.severity).label,
+      id: v.id,
+      severity: normalizeSev(v.severity).label,
       severityVariant: normalizeSev(v.severity).variant,
-      title:       v.title,
-      code:        v.tool,
+      title: v.title,
+      code: v.tool,
       description: v.description,
-      file:        v.file_path,
-      line:        v.line_start,
+      file: v.file_path,
+      line: v.line_start,
       recommendation: v.recommendation,
     }));
   }, [dbVulns]);
@@ -166,7 +166,7 @@ const ScanResult = () => {
   const stats = useMemo(() => {
     const crit = vulns.filter(v => v.severity === "Critique").length;
     const elev = vulns.filter(v => v.severity === "Élevée").length;
-    const moy  = vulns.filter(v => v.severity === "Moyenne").length;
+    const moy = vulns.filter(v => v.severity === "Moyenne").length;
     // Score calculé comme le backend : déduction par vuln individuelle
     const computedScore = Math.max(
       0,
@@ -181,26 +181,26 @@ const ScanResult = () => {
   // ── Téléchargement du rapport PDF ──────────────────────────────────────────
   const handleDownloadPdf = async () => {
     try {
-    const analyzedAt = new Date();
+      const analyzedAt = new Date();
 
-    const doc = (
-      <ScanReportPdf
-        repoName={repoName}
-        analyzedAt={analyzedAt}
-        score={stats.score}
-        stats={stats}
-        vulns={vulns}
-      />
-    );
+      const doc = (
+        <ScanReportPdf
+          repoName={repoName}
+          analyzedAt={analyzedAt}
+          score={stats.score}
+          stats={stats}
+          vulns={vulns}
+        />
+      );
 
-    const blob = await pdf(doc).toBlob();
-    saveAs(blob, `rapport-${repoName}.pdf`);
+      const blob = await pdf(doc).toBlob();
+      saveAs(blob, `rapport-securescan.pdf`);
 
-  } catch (e) {
-    console.error(e);
-    alert("Impossible de générer le PDF.");
-  }
-};
+    } catch (e) {
+      console.error(e);
+      alert("Impossible de générer le PDF.");
+    }
+  };
 
   return (
     <div className="page-wrapper">

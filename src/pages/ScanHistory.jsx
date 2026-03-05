@@ -16,7 +16,7 @@ const ScanHistory = () => {
   }, []);
 
   const handleVoirDetails = (row) => {
-    navigate("/analyses/resultat", { state: { analysisId: row.id, dbScore: row.score } });
+    navigate("/analyses/resultat", { state: { analysisId: row.id, dbScore: row.score, repoName: row.repo_name ?? row.repo_url } });
   };
 
   const formatDate = (iso) => {
