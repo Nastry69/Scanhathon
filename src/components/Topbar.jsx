@@ -20,12 +20,11 @@ const Topbar = () => {
 
   return (
     <header className="topbar">
-      <a className="topbar-brand" onClick={() => navigate("/")}>ScanHathon</a>
+      <a className="topbar-brand" onClick={() => navigate("/")}>Secure<span style={{ color: "#05E575" }}>Scan</span></a>
       {loggedIn && (
         <nav className="topbar-nav">
           <a className={`topbar-nav-link${location.pathname === "/" ? " active" : ""}`} onClick={() => navigate("/")}>Analyse</a>
-          <a className={`topbar-nav-link${location.pathname === "/analyses/resultat" ? " active" : ""}`} onClick={() => navigate("/analyses/resultat")}>Tableau de bord</a>
-          <a className={`topbar-nav-link${location.pathname === "/analyses/historique" ? " active" : ""}`} onClick={() => navigate("/analyses/historique")}>Historique</a>
+<a className={`topbar-nav-link${location.pathname === "/analyses/historique" ? " active" : ""}`} onClick={() => navigate("/analyses/historique")}>Historique</a>
         </nav>
       )}
       <div className="topbar-right">

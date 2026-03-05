@@ -30,8 +30,8 @@
 .vuln-item {
   padding: 12px 12px;
   border-radius: 12px;
-  background: #020617;
-  border: 1px solid #111827;
+  background: #0A0E17;
+  border: 1px solid #151E2C;
 }
 
 .vuln-header {
@@ -83,11 +83,11 @@
 }
 
 .code-block {
-  background: #020617;
+  background: #0A0E17;
   border-radius: 8px;
   padding: 8px 10px;
   margin-top: 6px;
-  border: 1px solid #1f2937;
+  border: 1px solid #1B4D34;
   font-size: 12px;
   overflow-x: auto;
 }

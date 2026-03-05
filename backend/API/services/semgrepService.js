@@ -12,6 +12,7 @@ function runSemgrep(projectPath, scanId) {
           ...process.env,
           PYTHONUTF8: "1",
           PYTHONIOENCODING: "utf-8",
+          PATH: process.env.PATH + ':/usr/local/bin',
         },
         maxBuffer: 10 * 1024 * 1024,
       },
