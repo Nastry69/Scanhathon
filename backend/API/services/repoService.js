@@ -120,7 +120,7 @@ function npmInstall(projectPath) {
   const command = hasLock ? "npm ci" : "npm install";
 
   return new Promise((resolve, reject) => {
-    exec(command, { cwd: projectPath }, (err, stdout, stderr) => {
+    exec(command, { cwd: projectPath }, (err, _stdout, stderr) => {
       if (err) return reject(new Error(stderr || err.message));
       resolve();
     });
@@ -144,7 +144,7 @@ function walk(currentDir, depth, maxDepth, onDir) {
   if (depth > maxDepth) return;
   onDir(currentDir);
 
-  let entries = [];
+  let entries;
   try {
     entries = fs.readdirSync(currentDir, { withFileTypes: true });
   } catch {

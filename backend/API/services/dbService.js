@@ -83,7 +83,7 @@ async function createAnalysis(userId, repoUrl, branch = 'main') {
 async function updateAnalysisScore(analysisId, vulnerabilities = []) {
   const penalty = vulnerabilities.reduce((sum, v) => {
     const sev = String(v.severity || '').toLowerCase();
-    return sum + (SEVERITY_WEIGHTS[sev] ?? 0);
+    return sum + (Object.hasOwn(SEVERITY_WEIGHTS, sev) ? SEVERITY_WEIGHTS[sev] : 0);
   }, 0);
 
   const score = Math.max(0, 100 - penalty);

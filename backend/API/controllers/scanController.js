@@ -115,10 +115,10 @@ exports.scanRepo = async (req, res) => {
       const { projectPath, repoPath, scanId } = await prepareRepo(githubUrl);
       console.log(`[SCAN] Repo prêt : ${projectPath}`);
 
-      let npmAuditResult = null;
-      let eslintResult = null;
-      let semgrepResult = null;
-      let snykResult = null;
+      let npmAuditResult;
+      let eslintResult;
+      let semgrepResult;
+      let snykResult;
 
       // 3) npm audit
       updateScanStatus(lockKey, {
@@ -299,10 +299,10 @@ exports.scanZip = async (req, res) => {
 };
 
 async function runAllTools({ projectPath, scanId }) {
-  let npmAudit = null;
-  let semgrep = null;
-  let snyk = null;
-  let eslint = null;
+  let npmAudit;
+  let semgrep;
+  let snyk;
+  let eslint;
 
   try {
     npmAudit = await runNpmAudit(projectPath, scanId);

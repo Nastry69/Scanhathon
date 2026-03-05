@@ -21,26 +21,14 @@ module.exports = [
   {
     ignores: ["src/**", "*.config.js", "vite.config.*"],
   },
-  // Fichiers backend CommonJS
+  // Fichiers JS : détection automatique CommonJS vs ES modules
   {
-    files: ["**/*.js", "**/*.cjs"],
+    files: ["**/*.js", "**/*.cjs", "**/*.mjs"],
     ...js.configs.recommended,
     languageOptions: {
       ...js.configs.recommended.languageOptions,
       ecmaVersion: 2021,
-      sourceType: "script",
-      globals: {
-        ...js.configs.recommended.languageOptions?.globals,
-        ...nodeGlobals,
-      },
-    },
-  },
-  // Fichiers utilisant les ES modules (frontend, config)
-  {
-    files: ["**/*.mjs", "eslint.config.js"],
-    languageOptions: {
-      ecmaVersion: 2021,
-      sourceType: "module",
+      sourceType: "unambiguous",
       globals: {
         ...js.configs.recommended.languageOptions?.globals,
         ...nodeGlobals,
