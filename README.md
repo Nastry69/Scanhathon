@@ -1,161 +1,126 @@
-# 🔒 SecureScan
+# Scanhathon
 
-SecureScan est une application web développée dans le cadre d’un hackathon.
-L’objectif est de proposer un outil d’analyse automatisée de sécurité du code source basé sur les standards OWASP Top 10.
+Application web d'analyse de sécurité de code source. Elle accepte un **dépôt Git** (URL) ou une **archive ZIP**, combine plusieurs outils de scan (npm audit, Semgrep, Snyk, ESLint) pour détecter les vulnérabilités et problèmes de qualité de code, puis génère des rapports détaillés exportables en PDF.
 
-L’application permet de :
-- Importer un dépôt GitHub ou une archive ZIP
-- Scanner le code source
-- Identifier des vulnérabilités critiques
-- Générer un rapport de sécurité
-- Proposer des recommandations de remédiation
+L'analyse couvre trois catégories du **Top 10 OWASP** :
 
----
+| Catégorie | Description |
+|-----------|-------------|
+| **A03 - Injection** | Détection de failles d'injection (SQL, commandes, XSS…) via analyse statique Semgrep |
+| **A04 - Insecure Design** | Identification de mauvaises pratiques de conception et patterns non sécurisés |
+| **A05 - Security Misconfiguration** | Détection de dépendances vulnérables et configurations exposées (npm audit, Snyk) |
 
-## 🎯 Objectif du Hackathon
+## Stack technique
 
-Le but du projet est de développer un **scanner de gestion d’erreurs de sécurité** ciblant spécifiquement certaines catégories du **OWASP Top 10**.
+| Couche | Technologie |
+|--------|-------------|
+| Frontend | React 19, React Router 7, Vite 7 |
+| Backend (API principale) | Node.js, Express 5 |
+| Backend (API scanner) | Node.js, Express 5 |
+| Base de données / Auth | Supabase (PostgreSQL + Auth) |
+| Authentification | GitHub OAuth 2.0, JWT |
+| Outils de scan | npm audit, Semgrep, Snyk, ESLint |
+| PDF | @react-pdf/renderer, jsPDF |
 
-Pour cette première version, nous avons concentré notre analyse sur :
+## Prérequis
 
-- **A03 – Injection**
-- **A04 – Cryptographic Failures**
-- **A05 – Security Misconfiguration**
+- Node.js >= 18
+- npm
+- [Semgrep](https://semgrep.dev/docs/getting-started/) installé localement (`pip install semgrep`)
+- Un compte [Supabase](https://supabase.com) avec un projet créé
+- Une [OAuth App GitHub](https://github.com/settings/developers) enregistrée
+- (Optionnel) Un token [Snyk](https://app.snyk.io/account)
 
-Ces trois catégories représentent des risques majeurs dans les applications web modernes.
+## Installation
 
----
+### 1. Cloner le dépôt
 
-## 🛡️ Périmètre d’analyse
+```bash
+git clone <url-du-repo>
+cd Scanhathon
+```
 
-### 🔎 A03 – Injection
-Détection de :
-- Requêtes SQL non paramétrées
-- Absence de sanitisation des entrées utilisateur
-- Exécution de commandes dynamiques non sécurisées
+### 2. Variables d'environnement
 
-### 🔐 A04 – Cryptographic Failures
-Analyse de :
-- Utilisation d’algorithmes obsolètes (MD5, SHA1)
-- Mauvaise gestion des cookies de session
-- Absence de chiffrement HTTPS
-- Clés exposées dans le code
+Copier le fichier d'exemple et le remplir :
 
-### ⚙️ A05 – Security Misconfiguration
-Vérification de :
-- En-têtes de sécurité manquants (HSTS, CSP, X-Frame-Options)
-- Configurations par défaut non sécurisées
-- Fichiers sensibles exposés
-- Variables d’environnement mal protégées
+```bash
+cp .env.example .env
+```
 
----
+Éditer `.env` :
 
-## 🧱 Architecture du Projet
+```env
+# Supabase
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<votre-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<votre-service-role-key>
 
-### Frontend
-- React
-- React Router
-- Gestion d’authentification (token localStorage)
-- Composants UI réutilisables (StatCard, Tag, Layout)
+# GitHub OAuth
+GITHUB_CLIENT_ID=<client-id-oauth-app>
+GITHUB_CLIENT_SECRET=<client-secret-oauth-app>
 
-### Backend (en cours d’intégration)
-- Node.js
-- Express
-- API REST pour :
-  - Création d’un scan
-  - Suivi de progression
-  - Récupération des résultats
-  - Authentification utilisateur
+# Clé de chiffrement AES-256 pour les tokens GitHub (64 caractères hex)
+# Générer avec : node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+GITHUB_TOKEN_SECRET=<clé-64-chars>
 
----
+# URLs
+FRONTEND_URL=http://localhost:5173
+CALLBACK_URL=http://localhost:3001/auth/github/callback
 
-## 📂 Structure du Projet
+# Snyk (optionnel)
+SNYK_TOKEN=<votre-token-snyk>
+```
 
-backend/
-src/
-├── components/
-│ ├── Layout.jsx
-│ ├── Sidebar.jsx
-│ ├── Topbar.jsx
-│ ├── StatCard.jsx
-│ └── Tag.jsx
-│
-├── pages/
-│ ├── Login.jsx
-│ ├── Register.jsx
-│ ├── Profile.jsx
-│ ├── NewScan.jsx
-│ ├── ScanInProgress.jsx
-│ ├── ScanResult.jsx
-│ └── ScanHistory.jsx
-│
-├── auth.js
-└── App.jsx
+> **GitHub OAuth App** : dans les paramètres de l'app GitHub, renseigner `http://localhost:3001/auth/github/callback` comme URL de callback.
 
+### 3. Installer les dépendances
 
+```bash
+# Dépendances frontend + backend principal
+npm install
 
----
+# Dépendances de l'API scanner
+cd backend/API && npm install && cd ../..
+```
 
-## 🔐 Authentification
+## Lancement
 
-Le système d’authentification est basé sur :
+L'application nécessite **2 terminaux** :
 
-- Stockage d’un token JWT en `localStorage`
-- Protection des routes via un composant `PrivateRoute`
-- Gestion de la déconnexion côté client
+```bash
+# Terminal 1 — Frontend (http://localhost:5173)
+npm run dev
 
----
+# Terminal 2 — API principale (port 3000) + API scanner (port 3001)
+npm run server
+```
 
-## 🚀 Fonctionnalités
+La documentation Swagger est disponible sur [http://localhost:3000/api-docs](http://localhost:3000/api-docs).
 
-- Création d’un nouveau scan
-- Visualisation de la progression d’analyse
-- Affichage des vulnérabilités détectées
-- Tri et filtrage des résultats
-- Historique des scans
-- Téléchargement de rapport PDF (interface prête)
-- Gestion de compte utilisateur
+## Structure du projet
 
----
+```
+Scanhathon/
+├── src/                    # Frontend React
+│   ├── components/         # Composants réutilisables
+│   ├── pages/              # Pages de l'application
+│   └── utils/              # Contexte auth, clients API
+├── backend/
+│   ├── server.js           # API principale (port 3000)
+│   ├── routes/             # Routes Express (users, analyses, github…)
+│   ├── middleware/         # Middleware JWT
+│   └── API/                # API scanner (port 3001)
+│       ├── app.js          # Point d'entrée
+│       ├── controllers/    # Logique de scan
+│       └── services/       # npm audit, Semgrep, Snyk, ESLint
+├── .env.example
+└── package.json
+```
 
-## 📊 Workflow d’analyse
+## Build de production
 
-1. L’utilisateur soumet un dépôt GitHub ou un ZIP.
-2. Un scan est créé côté backend.
-3. L’état d’avancement est suivi via une page dédiée.
-4. Les vulnérabilités détectées sont classées par sévérité.
-5. Des recommandations OWASP sont proposées.
-
----
-
-## 🧠 Vision Produit
-
-SecureScan vise à :
-
-- Démocratiser la sécurité applicative
-- Fournir une analyse rapide et pédagogique
-- Offrir une interface claire pour développeurs
-- Encourager les bonnes pratiques sécuritaires
-
----
-
-## 👥 Équipe
-
-Projet développé dans le cadre d’un hackathon.
-Frontend et Backend développés en collaboration.
-
----
-
-## 📌 Améliorations futures
-
-- Analyse en temps réel via WebSocket
-- Intégration CI/CD automatique
-- Scan multi-langage
-- Dashboard avancé avec scoring dynamique
-- Analyse complète du OWASP Top 10
-
----
-
-## 📜 Licence
-
-Projet développé à des fins éducatives dans le cadre d’un hackathon.
+```bash
+npm run build
+# Fichiers statiques générés dans dist/
+```
