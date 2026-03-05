@@ -62,11 +62,6 @@ const Login = () => {
           onChange={onChangeField("password")}
           required
         />
-        <div className="auth-help-row">
-          <Link to="/mot-de-passe-oublie" className="btn-link">
-            Mot de passe oublié ?
-          </Link>
-        </div>
       </div>
 
       <button type="submit" className="btn-primary auth-submit" disabled={loading}>

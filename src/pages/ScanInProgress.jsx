@@ -8,6 +8,7 @@ const ScanInProgress = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scanId = location.state?.scanId;
+  const analysisId = location.state?.analysisId;
 
   useEffect(() => {
     // Fausse progression
@@ -40,9 +41,9 @@ const ScanInProgress = () => {
 
   useEffect(() => {
     if (scanReady && scanId) {
-      navigate("/analyses/resultat", { state: { scanId } });
+      navigate("/analyses/resultat", { state: { scanId, analysisId } });
     }
-  }, [scanReady, scanId, navigate]);
+  }, [scanReady, scanId, analysisId, navigate]);
 
   // Calcul de l'angle du cercle en fonction du pourcentage
   const progressAngle = progress * 3.6;

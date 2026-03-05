@@ -24,7 +24,7 @@
   width: 155px;
   height: 155px;
   border-radius: 999px;
-  background: #020617;
+  background: #0A0E17;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,17 +50,17 @@
 .progress-item {
   padding: 12px 14px;
   border-radius: 12px;
-  background: #020617;
-  border: 1px solid #111827;
+  background: #0A0E17;
+  border: 1px solid #151E2C;
 }
 
 .progress-item.done {
-  border-color: rgba(52, 211, 153, 0.4);
+  border-color: rgba(5, 229, 117, 0.4);
 }
 
 .progress-item.active {
-  border-color: rgba(59, 130, 246, 0.6);
-  background: radial-gradient(circle at top left, #0b1120, #020617);
+  border-color: rgba(5, 229, 117, 0.6);
+  background: radial-gradient(circle at top left, #151E2C, #0A0E17);
 }
 
 .progress-item-header {
@@ -82,8 +82,8 @@
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: #020617;
-  border: 1px solid #1f2937;
+  background: #0A0E17;
+  border: 1px solid #1B4D34;
   color: var(--text-soft);
 }
 

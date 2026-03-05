@@ -10,7 +10,9 @@ create extension if not exists "uuid-ossp";
 create table public.users (
   id            uuid primary key references auth.users(id) on delete cascade,
   username      varchar(255),
-  created_at    timestamp with time zone default now()
+  created_at    timestamp with time zone default now(),
+  github_access_token text,
+  github_username text
 );
 
 
@@ -43,6 +45,7 @@ create table public.vulnerabilities (
   id              uuid primary key default uuid_generate_v4(),
   analysis_id     uuid not null references public.analyses(id) on delete cascade,
   tool            vuln_tool not null,
+  "A0number"      text check ("A0number" in ('A03:2025', 'A04:2025', 'A05:2025')),
   severity        vuln_severity not null,
   title           varchar(500) not null,
   description     text,
@@ -127,7 +130,10 @@ select
   count(v.id) filter (where v.severity = 'high')        as high_count,
   count(v.id) filter (where v.severity = 'medium')      as medium_count,
   count(v.id) filter (where v.severity = 'low')         as low_count,
-  count(v.id) filter (where v.severity = 'info')        as info_count
+  count(v.id) filter (where v.severity = 'info')        as info_count,
+  count(v.id) filter (where v."A0number" = 'A03:2025')  as a03_count,
+  count(v.id) filter (where v."A0number" = 'A04:2025')  as a04_count,
+  count(v.id) filter (where v."A0number" = 'A05:2025')  as a05_count
 from public.analyses a
 left join public.vulnerabilities v on v.analysis_id = a.id
 group by a.id;

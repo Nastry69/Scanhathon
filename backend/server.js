@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express'
 import usersRouter from './routes/users.js'
 import analysesRouter from './routes/analyses.js'
 import vulnerabilitiesRouter from './routes/vulnerabilities.js'
+import githubRouter from './routes/github.js'
 import { swaggerSpec } from './swagger.js'
 
 const app = express()
@@ -22,6 +23,7 @@ app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec))
 app.use('/api/users', usersRouter)
 app.use('/api/analyses', analysesRouter)
 app.use('/api/vulnerabilities', vulnerabilitiesRouter)
+app.use('/auth/github', githubRouter)
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`)

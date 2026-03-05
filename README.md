@@ -1,6 +1,6 @@
-# 🔒 ScanHathon
+# 🔒 SecureScan
 
-ScanHathon est une application web développée dans le cadre d’un hackathon.
+SecureScan est une application web développée dans le cadre d’un hackathon.
 L’objectif est de proposer un outil d’analyse automatisée de sécurité du code source basé sur les standards OWASP Top 10.
 
 L’application permet de :
@@ -130,7 +130,7 @@ Le système d’authentification est basé sur :
 
 ## 🧠 Vision Produit
 
-ScanHathon vise à :
+SecureScan vise à :
 
 - Démocratiser la sécurité applicative
 - Fournir une analyse rapide et pédagogique

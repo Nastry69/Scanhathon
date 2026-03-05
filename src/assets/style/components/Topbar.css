@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
-  border-bottom: 1px solid #020617;
+  border-bottom: 1px solid #0A0E17;
   position: relative;
 }
 
@@ -18,7 +18,7 @@
 }
 
 .topbar-nav-link {
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted, #7D8798);
   font-size: 0.875rem;
   font-weight: 500;
   padding: 6px 14px;
@@ -30,12 +30,12 @@
 
 .topbar-nav-link:hover {
   color: #f1f5f9;
-  background: #1f2937;
+  background: #1B4D34;
 }
 
 .topbar-nav-link.active {
-  color: #2563eb;
-  background: #0B1020;
+  color: #05E575;
+  background: #151E2C;
 }
 
 .topbar-brand {
@@ -47,7 +47,7 @@
 
 .topbar-btn {
   background: transparent;
-  border: 1px solid #1f2937;
+  border: 1px solid #1B4D34;
   color: var(--text-muted);
   padding: 6px 14px;
   border-radius: 6px;
@@ -58,7 +58,7 @@
 }
 
 .topbar-btn:hover {
-  border-color: #4b5563;
+  border-color: #7D8798;
   color: #f1f5f9;
 }
 
@@ -66,8 +66,8 @@
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  border: 1px solid #1f2937;
-  background: #020617;
+  border: 1px solid #1B4D34;
+  background: #0A0E17;
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
