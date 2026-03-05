@@ -5,16 +5,60 @@ import { useNavigate, useLocation } from "react-router-dom";
 const ScanInProgress = () => {
   const [progress, setProgress] = useState(0);
   const [scanReady, setScanReady] = useState(false);
+  const [scanError, setScanError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const scanId = location.state?.scanId;
-  const analysisId = location.state?.analysisId;
+  const [scanId, setScanId] = useState(location.state?.scanId ?? null);
+  const [analysisId, setAnalysisId] = useState(location.state?.analysisId ?? null);
+  const githubUrl = location.state?.githubUrl;
+  const userId = location.state?.userId ?? null;
+
+  // Lance le scan dès l'arrivée sur la page si aucun scanId n'a encore été fourni.
+  useEffect(() => {
+    if (scanId) return;
+
+    if (!githubUrl) {
+      setScanError("Aucun repository fourni pour lancer le scan.");
+      return;
+    }
+
+    let cancelled = false;
+
+    const startScan = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ githubUrl, userId })
+        });
+
+        if (!response.ok) throw new Error("Erreur API");
+
+        const data = await response.json();
+        if (cancelled) return;
+
+        setScanId(data.scanId ?? null);
+        setAnalysisId(data.analysisId ?? null);
+        setProgress((p) => Math.max(p, 12));
+      } catch (err) {
+        if (cancelled) return;
+        setScanError("Impossible de lancer l'analyse.");
+      }
+    };
+
+    startScan();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [scanId, githubUrl, userId]);
 
   useEffect(() => {
     // Fausse progression
     const interval = setInterval(() => {
       setProgress((p) => {
-        if (p >= 100) return 100;
+        if (scanReady) return 100;
+        if (p >= 95) return 95;
         return p + 2;
       });
     }, 150);
@@ -37,7 +81,7 @@ const ScanInProgress = () => {
       clearInterval(interval);
       clearInterval(pollInterval);
     };
-  }, [scanId]);
+  }, [scanId, scanReady]);
 
   useEffect(() => {
     if (scanReady && scanId) {
@@ -56,6 +100,7 @@ const ScanInProgress = () => {
         Nous examinons actuellement votre infrastructure pour identifier les
         vulnérabilités potentielles.
       </p>
+      {scanError && <p className="page-subtitle" style={{ color: "#ef4444" }}>{scanError}</p>}
 
       {/* Carte principale contenant l’indicateur de progression + détails des étapes */}
       <div className="card inprogress-card">

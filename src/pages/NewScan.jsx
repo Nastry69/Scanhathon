@@ -21,18 +21,10 @@ const NewScan = () => {
     e.preventDefault();
     if (!githubUrl) return;
 
-    try {
-      const response = await fetch("http://localhost:3001/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ githubUrl, userId: user?.id ?? null })
-      });
-      if (!response.ok) throw new Error("Erreur API");
-      const { scanId, analysisId } = await response.json();
-      navigate("/analyses/en-cours", { state: { scanId, analysisId } });
-    } catch (err) {
-      alert("Erreur lors de l’analyse !");
-    }
+    // Le scan est lancé dans la page ScanInProgress pour afficher immédiatement l'état d'attente.
+    navigate("/analyses/en-cours", {
+      state: { githubUrl, userId: user?.id ?? null }
+    });
   };
 
   const onFileChange = (e) => {
