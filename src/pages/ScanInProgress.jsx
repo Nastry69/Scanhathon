@@ -3,15 +3,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 /** Page de l'analyse */
 const ScanInProgress = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [progress, setProgress] = useState(0);
-  const [scanReady, setScanReady] = useState(false);
+  const [scanReady, setScanReady] = useState(!!location.state?.scanId);
   const [scanError, setScanError] = useState("");
   const [statusMessage, setStatusMessage] = useState("Initialisation du scan...");
   const [serverProgress, setServerProgress] = useState(0);
   const [scanStage, setScanStage] = useState("starting");
   const startTriggeredRef = useRef(false);
-  const navigate = useNavigate();
-  const location = useLocation();
   const [scanId, setScanId] = useState(location.state?.scanId ?? null);
   const [analysisId, setAnalysisId] = useState(location.state?.analysisId ?? null);
   const githubUrl = location.state?.githubUrl;

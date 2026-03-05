@@ -25,16 +25,6 @@ const NewScan = () => {
     }
   }, [loggedIn, user?.github_username]);
 
-  const urlSubmit = async (e) => {
-    e.preventDefault();
-    if (!githubUrl) return;
-
-    // Le scan est lancé dans la page ScanInProgress pour afficher immédiatement l'état d'attente.
-    navigate("/analyses/en-cours", {
-      state: { githubUrl, userId: user?.id ?? null }
-    });
-  };
-
   const onFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -79,7 +69,7 @@ const NewScan = () => {
         const repoName = zipName?.replace(/\.zip$/i, "") || "zip-upload";
 
         navigate("/analyses/en-cours", {
-          state: { scanId: data.scanId, repoName, githubUrl: null, source: "zip" },
+          state: { scanId: data.scanId, analysisId: data.analysisId ?? null, repoName, githubUrl: null, source: "zip" },
         });
 
       } else {
@@ -99,7 +89,7 @@ const NewScan = () => {
           .replace(".git", "");
 
         navigate("/analyses/en-cours", {
-          state: { scanId: data.scanId, repoName, githubUrl, source: "github" },
+          state: { scanId: data.scanId, analysisId: data.analysisId ?? null, repoName, githubUrl, source: "github" },
         });
       }
     } catch (err) {
@@ -118,7 +108,7 @@ const NewScan = () => {
         {!loggedIn && (<><br />Si vous souhaitez conserver votre analyse <a href="/authpage">connectez-vous.</a></>)}
       </p>
 
-      <form className="card newscan-card" onSubmit={urlSubmit}>
+      <form className="card newscan-card" onSubmit={onZipSubmit}>
         <section className="newscan-section">
           <p className="newscan-section-label">Importer depuis GitHub</p>
           {loggedIn && user?.github_username && repos.length > 0 && (

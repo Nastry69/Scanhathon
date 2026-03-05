@@ -284,6 +284,7 @@ exports.scanZip = async (req, res) => {
     if (analysisId) {
       try {
         await saveVulnerabilities(analysisId, result);
+        await cleanupScanFolder(scanId);
       } catch (e) {
         console.error("[SCAN ZIP] DB saveVulnerabilities failed:", e);
         await failAnalysis(analysisId).catch(() => { });
