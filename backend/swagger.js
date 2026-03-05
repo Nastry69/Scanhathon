@@ -6,7 +6,7 @@ export const swaggerSpec = {
         description: 'API de scan de vulnérabilités pour dépôts Git',
     },
     servers: [
-        { url: 'http://localhost:3000', description: 'Serveur de développement' }
+        { url: 'http://localhost:3001', description: 'Serveur de développement' }
     ],
     components: {
         securitySchemes: {

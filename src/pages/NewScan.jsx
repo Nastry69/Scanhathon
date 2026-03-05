@@ -29,7 +29,7 @@ const NewScan = () => {
       });
       if (!response.ok) throw new Error("Erreur API");
       const { scanId } = await response.json();
-      navigate("/analyses/en-cours", { state: { scanId } });
+      navigate("/analyses/en-cours", { state: { scanId, githubUrl } });
     } catch (err) {
       alert("Erreur lors de l’analyse !");
     }
