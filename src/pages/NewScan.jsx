@@ -25,6 +25,16 @@ const NewScan = () => {
     }
   }, [loggedIn, user?.github_username]);
 
+  const urlSubmit = async (e) => {
+    e.preventDefault();
+    if (!githubUrl) return;
+
+    // Le scan est lancé dans la page ScanInProgress pour afficher immédiatement l'état d'attente.
+    navigate("/analyses/en-cours", {
+      state: { githubUrl, userId: user?.id ?? null }
+    });
+  };
+
   const onFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -35,7 +45,7 @@ const NewScan = () => {
     setSelectedRepo("");
   };
 
-  const onSubmit = async (e) => {
+  const onZipSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -108,7 +118,7 @@ const NewScan = () => {
         {!loggedIn && (<><br />Si vous souhaitez conserver votre analyse <a href="/authpage">connectez-vous.</a></>)}
       </p>
 
-      <form className="card newscan-card" onSubmit={onSubmit}>
+      <form className="card newscan-card" onSubmit={urlSubmit}>
         <section className="newscan-section">
           <p className="newscan-section-label">Importer depuis GitHub</p>
           {loggedIn && user?.github_username && repos.length > 0 && (

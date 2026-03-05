@@ -1,6 +1,8 @@
 'use strict';
 
-require('dotenv').config({ path: require('path').join(__dirname, '../../../.env') });
+require('dotenv').config({
+  path: require('path').join(__dirname, '../../../.env'),
+});
 
 const { createClient } = require('@supabase/supabase-js');
 const { parseAllScans } = require('./scanParser');
@@ -10,88 +12,188 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-/**
- * Crée un enregistrement dans public.analyses avec status 'running'.
- * @param {string} userId  - UUID de l'utilisateur (auth.uid)
- * @param {string} repoUrl - URL GitHub du dépôt
- * @returns {Promise<string>} analysisId (UUID)
- */
-async function createAnalysis(userId, repoUrl) {
-  const repoName = repoUrl.replace(/\.git$/, '').split('/').pop();
+const SEVERITY_WEIGHTS = {
+  critical: 25,
+  high: 15,
+  medium: 7,
+  low: 3,
+  info: 0,
+};
+
+function extractRepoName(repoUrl = '') {
+  const clean = String(repoUrl).trim().replace(/\/+$/, '');
+  if (!clean) return '';
+  const parts = clean.split('/');
+  return parts[parts.length - 1] || clean;
+}
+
+function normalizeTextForKey(value = '') {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function vulnerabilityDedupKey(v) {
+  return [
+    normalizeTextForKey(v.tool),
+    normalizeTextForKey(v.severity),
+    normalizeTextForKey(v.A0number),
+    normalizeTextForKey(v.title),
+    normalizeTextForKey(v.file_path),
+    String(v.line_start ?? ''),
+    normalizeTextForKey(v.description).slice(0, 300),
+  ].join('|');
+}
+
+function dedupeVulnerabilities(rows = []) {
+  const seen = new Set();
+  const unique = [];
+
+  for (const row of rows) {
+    const key = vulnerabilityDedupKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(row);
+  }
+
+  return unique;
+}
+
+async function createAnalysis(userId, repoUrl, branch = 'main') {
+  const payload = {
+    user_id: userId,
+    repo_url: repoUrl,
+    repo_name: extractRepoName(repoUrl),
+    branch,
+    status: 'running',
+    score: null,
+  };
 
   const { data, error } = await supabaseAdmin
     .from('analyses')
-    .insert({ user_id: userId, repo_url: repoUrl, repo_name: repoName, status: 'running' })
+    .insert([payload])
     .select('id')
     .single();
 
-  if (error) {
-    console.error('[db] Erreur création analyse:', error);
-    throw error;
-  }
-
-  console.log(`[db] Analyse créée : ${data.id}`);
+  if (error) throw error;
   return data.id;
 }
 
-/**
- * Parse les résultats des 4 scanners et insère les vulnérabilités en DB,
- * puis met à jour le score et le status de l'analyse.
- *
- * @param {string} analysisId
- * @param {{ snyk, npmAudit, eslint, semgrep }} scanResults
- */
-async function saveVulnerabilities(analysisId, scanResults) {
-  const rows = parseAllScans(scanResults, analysisId);
+async function updateAnalysisScore(analysisId, vulnerabilities = []) {
+  const penalty = vulnerabilities.reduce((sum, v) => {
+    const sev = String(v.severity || '').toLowerCase();
+    return sum + (SEVERITY_WEIGHTS[sev] ?? 0);
+  }, 0);
 
-  if (!rows.length) {
-    console.log(`[db] Aucune vulnérabilité trouvée pour l'analyse ${analysisId}`);
+  const score = Math.max(0, 100 - penalty);
+
+  const { error } = await supabaseAdmin
+    .from('analyses')
+    .update({
+      score,
+      status: 'completed', // <-- mettre une valeur existante dans analysis_status
+    })
+    .eq('id', analysisId);
+
+  if (error) throw error;
+  return { score, status: 'completed' };
+}
+
+
+async function failAnalysis(analysisId, reason = null) {
+  const payload = { status: 'failed' };
+  if (reason) payload.error_message = String(reason).slice(0, 2000);
+
+  const { error } = await supabaseAdmin
+    .from('analyses')
+    .update(payload)
+    .eq('id', analysisId);
+
+  if (error) throw error;
+}
+
+async function saveVulnerabilities(analysisId, input) {
+  // input peut être:
+  // - un tableau déjà normalisé
+  // - un objet { snyk, npmAudit, eslint, semgrep }
+  const vulnerabilities = Array.isArray(input)
+    ? input
+    : parseAllScans(input || {}, analysisId);
+
+  if (!Array.isArray(vulnerabilities)) {
+    throw new TypeError('saveVulnerabilities: vulnerabilities doit être un tableau');
+  }
+
+  // Ensure column casing matches DB schema ("A0number").
+  const vulnerabilitiesForInsert = vulnerabilities.map((v) => {
+    const a0 = v.A0number ?? v.a0number ?? null;
+    const row = { ...v, A0number: a0 };
+    delete row.a0number;
+    return row;
+  });
+
+  const uniqueVulnerabilitiesForInsert = dedupeVulnerabilities(vulnerabilitiesForInsert);
+
+  if (uniqueVulnerabilitiesForInsert.length === 0) {
     await updateAnalysisScore(analysisId, []);
     return { inserted: 0 };
   }
 
   const { data, error } = await supabaseAdmin
     .from('vulnerabilities')
-    .insert(rows)
+    .insert(uniqueVulnerabilitiesForInsert)
     .select('id');
 
-  if (error) {
-    console.error('[db] Erreur insertion vulnérabilités:', error);
-    throw error;
-  }
+  if (error) throw error;
 
-  console.log(`[db] ${data.length} vulnérabilités insérées pour l'analyse ${analysisId}`);
-  await updateAnalysisScore(analysisId, rows);
-
-  return { inserted: data.length };
+  await updateAnalysisScore(analysisId, uniqueVulnerabilitiesForInsert);
+  return { inserted: data?.length ?? uniqueVulnerabilitiesForInsert.length };
 }
 
-/**
- * Poids par sévérité pour calculer le score (100 = parfait, 0 = critique).
- */
-const SEVERITY_WEIGHTS = { critical: 25, high: 15, medium: 7, low: 3, info: 0 };
+async function getVulnerabilities(analysisId) {
+  const { data, error } = await supabaseAdmin
+    .from('vulnerabilities')
+    .select('*')
+    .eq('analysis_id', analysisId)
+    .order('created_at', { ascending: false });
 
-async function updateAnalysisScore(analysisId, rows) {
-  const deduction = rows.reduce((sum, r) => sum + (SEVERITY_WEIGHTS[r.severity] ?? 0), 0);
-  const score = Math.max(0, 100 - deduction);
-
-  const { error } = await supabaseAdmin
-    .from('analyses')
-    .update({ score, status: 'completed' })
-    .eq('id', analysisId);
-
-  if (error) console.error('[db] Erreur mise à jour du score:', error);
-  else console.log(`[db] Analyse ${analysisId} — score: ${score}/100`);
+  if (error) throw error;
+  return data ?? [];
 }
 
-/**
- * Marque une analyse comme 'failed'.
- */
-async function failAnalysis(analysisId) {
-  await supabaseAdmin
-    .from('analyses')
-    .update({ status: 'failed' })
-    .eq('id', analysisId);
+async function getAnalyses() {
+  const { data, error } = await supabaseAdmin
+    .from('analyses_summary')
+    .select(`
+      id,
+      repo_name,
+      repo_url,
+      branch,
+      status,
+      score,
+      created_at,
+      total_vulns,
+      critical_count,
+      high_count,
+      medium_count,
+      low_count,
+      info_count,
+      a03_count,
+      a04_count,
+      a05_count
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
 }
 
-module.exports = { createAnalysis, saveVulnerabilities, failAnalysis };
+module.exports = {
+  createAnalysis,
+  saveVulnerabilities,
+  updateAnalysisScore,
+  failAnalysis,
+  getVulnerabilities,
+  getAnalyses,
+};

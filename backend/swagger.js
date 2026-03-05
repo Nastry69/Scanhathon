@@ -45,6 +45,7 @@ export const swaggerSpec = {
                     id: { type: 'string', format: 'uuid' },
                     analysis_id: { type: 'string', format: 'uuid' },
                     tool: { type: 'string', enum: ['npm_audit', 'snyk', 'eslint', 'semgrep'] },
+                    A0number: { type: 'string', enum: ['A03:2025', 'A04:2025', 'A05:2025'], nullable: true },
                     severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low', 'info'] },
                     title: { type: 'string' },
                     description: { type: 'string', nullable: true },

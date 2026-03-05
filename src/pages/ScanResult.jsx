@@ -27,6 +27,34 @@ function normalizeSevEslint(severity) {
   return { label: "Info", variant: "medium" };
 }
 
+const OWASP_A0 = {
+  A03: "A03:2025",
+  A04: "A04:2025",
+  A05: "A05:2025",
+};
+
+function truncateText(text = "", maxChars = 220) {
+  const value = String(text || "");
+  if (value.length <= maxChars) return value;
+  return `${value.slice(0, maxChars).trimEnd()}...`;
+}
+
+function mapA0FromText(input = "") {
+  const s = String(input).toLowerCase();
+  if (/(sql|xss|inject|command injection|os command|child_process|child-process|nosql)/.test(s)) return OWASP_A0.A05;
+  if (/(crypto|cryptographic|cipher|hash|md5|sha1|weak key|tls|certificate|cleartext|sensitive data)/.test(s)) return OWASP_A0.A04;
+  if (/(dependency|supply chain|supply-chain|package|npm|yarn|pnpm|lockfile|postinstall|pipeline|ci\/cd)/.test(s)) return OWASP_A0.A03;
+  return null;
+}
+
+function mapA0FromSemgrepOwaspTags(tags = []) {
+  const t = tags.map(String).join(" ").toUpperCase();
+  if (t.includes("A05:2025") || t.includes("A03:2021") || t.includes("A01:2017") || t.includes("A07:2017")) return OWASP_A0.A05;
+  if (t.includes("A04:2025") || t.includes("A02:2021")) return OWASP_A0.A04;
+  if (t.includes("A03:2025") || t.includes("A06:2021")) return OWASP_A0.A03;
+  return null;
+}
+
 // ─── Composant ────────────────────────────────────────────────────────────────
 
 // Poids identiques au backend (dbService.js)
@@ -80,6 +108,7 @@ const ScanResult = () => {
         severityVariant: normalizeSevEslint(msg.severity).variant,
         title: msg.ruleId ? `Règle : ${msg.ruleId}` : "Alerte ESLint",
         code: msg.ruleId || "ESLINT",
+        a0number: mapA0FromText(`${msg.ruleId || ""} ${msg.message || ""}`),
         description: msg.message,
         file: file.filePath,
         line: msg.line,
@@ -101,6 +130,7 @@ const ScanResult = () => {
           severityVariant: sev.variant,
           title: advisory.title ?? `Vulnerability in ${entry.name}`,
           code: entry.name,
+          a0number: OWASP_A0.A03,
           description: advisory.url ? `Advisory: ${advisory.url}` : advisory.severity,
         };
       });
@@ -117,6 +147,8 @@ const ScanResult = () => {
         severityVariant: sev.variant,
         title: r.check_id,
         code: r.check_id,
+        a0number: mapA0FromSemgrepOwaspTags(Array.isArray(r.extra?.metadata?.owasp) ? r.extra.metadata.owasp : r.extra?.metadata?.owasp ? [r.extra.metadata.owasp] : [])
+          ?? mapA0FromText(`${r.check_id} ${r.extra?.message || ""}`),
         description: r.extra?.message || r.path,
         file: r.path,
         line: r.start?.line,
@@ -134,6 +166,7 @@ const ScanResult = () => {
         severityVariant: sev.variant,
         title: v.title || v.name,
         code: v.id,
+        a0number: OWASP_A0.A03,
         description: v.description || v.overview || v.severity,
         file: v.moduleName,
       };
@@ -150,6 +183,7 @@ const ScanResult = () => {
       severityVariant: normalizeSev(v.severity).variant,
       title: v.title,
       code: v.tool,
+      a0number: v.A0number ?? v.a0number,
       description: v.description,
       file: v.file_path,
       line: v.line_start,
@@ -244,10 +278,6 @@ const ScanResult = () => {
           <section className="card vulns-card">
             <div className="card-header">
               <h2 className="section-title">Vulnérabilités détectées</h2>
-              <div className="card-header-actions">
-                <button className="btn-chip">Trier par : Sévérité</button>
-                <button className="btn-chip">Filtrer</button>
-              </div>
             </div>
             <div className="vuln-list">
               {vulns.length === 0 && (
@@ -257,38 +287,17 @@ const ScanResult = () => {
                 <article key={v.id} className="vuln-item">
                   <div className="vuln-header">
                     <Tag variant={v.severityVariant}>{v.severity}</Tag>
+                    {v.a0number && <span className="owasp-badge">OWASP {v.a0number}</span>}
                     <span className="vuln-id">{v.file ? `${v.file} ` : ""}{v.code}</span>
                   </div>
                   <h3 className="vuln-title">{v.title}</h3>
-                  <p className="vuln-desc">{v.description}</p>
+                  <p className="vuln-desc" title={v.description}>{truncateText(v.description, 220)}</p>
                   {v.line && <div className="vuln-meta">Ligne : {v.line}</div>}
                   {v.recommendation && <div className="vuln-meta">{v.recommendation}</div>}
                 </article>
               ))}
             </div>
           </section>
-          <aside className="card fixes-card">
-            <h2 className="section-title">Corrections suggérées</h2>
-            <p className="fixes-subtitle">Basé sur OWASP Top 10</p>
-            <ul className="fixes-list">
-              <li>
-                <strong>A03:2021-Injection</strong>
-                <p>Utiliser des requêtes paramétrées (Prepared Statements) pour toutes les interactions avec la base de données.</p>
-                <pre className="code-block">
-                  <code>{`$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");`}</code>
-                </pre>
-              </li>
-              <li>
-                <strong>A02:2021-Cryptographic Failures</strong>
-                <p>Mettre à jour les algorithmes de hachage vers Argon2id ou bcrypt avec un coût minimal de 12.</p>
-              </li>
-              <li>
-                <strong>A05:2021-Security Misconf.</strong>
-                <p>Ajouter l'en-tête <code>Strict-Transport-Security</code> avec <code>max-age=63072000; includeSubDomains</code>.</p>
-              </li>
-            </ul>
-            <button className="btn-secondary">Voir le guide complet de remédiation</button>
-          </aside>
         </div>
       </div>
     </div>
@@ -296,3 +305,6 @@ const ScanResult = () => {
 };
 
 export default ScanResult;
+
+
+
